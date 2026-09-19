@@ -335,6 +335,50 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
   var style='';
   var $=function(id){return document.getElementById(id)};
 
+  // Lightweight anonymous product analytics for V0.1 market validation.
+  var queryParams=new URLSearchParams(window.location.search);
+  var trafficSource=(queryParams.get('source')||queryParams.get('utm_source')||'').trim();
+  if(!trafficSource){
+    try{trafficSource=document.referrer?new URL(document.referrer).hostname:'direct'}catch(e){trafficSource='direct'}
+  }
+  trafficSource=(trafficSource||'direct').slice(0,120);
+  var analyticsSession=localStorage.getItem('dayi_analytics_session');
+  if(!analyticsSession){
+    analyticsSession=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'sess-'+Date.now()+'-'+Math.random().toString(36).slice(2,12);
+    localStorage.setItem('dayi_analytics_session',analyticsSession);
+  }
+  var sentEvents={};
+  function analyticsMeta(extra){
+    var m={
+      utm_medium:(queryParams.get('utm_medium')||'').slice(0,120),
+      utm_campaign:(queryParams.get('utm_campaign')||'').slice(0,120)
+    };
+    if(extra){Object.keys(extra).forEach(function(k){m[k]=extra[k]})}
+    return m;
+  }
+  function trackEvent(name,extra,opts){
+    opts=opts||{};
+    var dedupeKey=opts.dedupeKey||name;
+    if(opts.once!==false && sentEvents[dedupeKey]) return;
+    if(opts.once!==false) sentEvents[dedupeKey]=true;
+    var row={
+      session_id:analyticsSession,
+      event_name:String(name).slice(0,80),
+      source:trafficSource,
+      path:window.location.pathname.slice(0,240),
+      order_code:opts.orderCode||null,
+      metadata:analyticsMeta(extra||{})
+    };
+    fetch(SUPABASE_URL+'/rest/v1/analytics_events',{
+      method:'POST',
+      headers:apiHeaders({'Content-Type':'application/json','Prefer':'return=minimal'}),
+      body:JSON.stringify(row),
+      keepalive:true
+    }).catch(function(){});
+  }
+
+  trackEvent('page_view',{viewport_width:window.innerWidth||0});
+
   function selectedNeeds(){
     return Array.from(document.querySelectorAll('#needs input:checked')).map(function(x){return x.value});
   }
@@ -346,10 +390,16 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
     var pct=n===0?0:(n>=8?100:Math.min(96,Math.round((n/7)*96)));
     $('progress').style.width=pct+'%';
     window.scrollTo({top:0,behavior:'smooth'});
-    if(n===6) renderSummary();
+    if(n===6){ renderSummary(); trackEvent('offer_view',{step:n}); }
+    if(n===7) trackEvent('payment_page_view',{step:n});
   }
   document.querySelectorAll('[data-go]').forEach(function(btn){
-    btn.addEventListener('click',function(){showStep(Number(btn.getAttribute('data-go')))});
+    btn.addEventListener('click',function(){
+      var target=Number(btn.getAttribute('data-go'));
+      if(current===0 && target===1) trackEvent('start_click',{target_step:1});
+      if(current===5 && target===6) trackEvent('notes_completed',{has_notes:!!$('notes').value.trim()});
+      showStep(target);
+    });
   });
   document.querySelectorAll('[data-back]').forEach(function(btn){
     btn.addEventListener('click',function(){showStep(Math.max(0,current-1))});
@@ -362,6 +412,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
       var p=$('photoPreview');
       p.src=URL.createObjectURL(photoFile);
       p.style.display='block';
+      trackEvent('photo_uploaded',{file_type:(photoFile.type||'unknown').slice(0,80)});
     }
   });
   $('photoNext').addEventListener('click',function(){
@@ -372,16 +423,19 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
   document.querySelectorAll('input[name="yardSize"]').forEach(function(r){
     r.addEventListener('change',function(){
       yardSize=this.value;
+      trackEvent('yard_size_completed',{yard_size:yardSize});
       setTimeout(function(){showStep(3)},160);
     });
   });
   $('needsNext').addEventListener('click',function(){
     if(!selectedNeeds().length){alert('请至少选择一个你最希望解决的问题');return}
+    trackEvent('needs_completed',{needs_count:selectedNeeds().length});
     showStep(4);
   });
   document.querySelectorAll('input[name="style"]').forEach(function(r){
     r.addEventListener('change',function(){
       style=this.value;
+      trackEvent('style_completed',{style:style});
       setTimeout(function(){showStep(5)},160);
     });
   });
@@ -436,6 +490,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
 
   $('payProof').addEventListener('change',function(){
     proofFile=this.files&&this.files[0];
+    if(proofFile) trackEvent('payment_proof_uploaded',{file_type:(proofFile.type||'unknown').slice(0,80)});
   });
 
   $('submitOrder').addEventListener('click',async function(){
@@ -477,6 +532,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
       if(!r.ok) throw new Error('订单提交失败：'+await r.text());
 
       localStorage.setItem('dayi_last_order',orderCode);
+      trackEvent('order_submitted',{amount_cny:PRICE,product_code:'direction_feedback_1'},{dedupeKey:'order_submitted:'+orderCode,orderCode:orderCode});
       $('orderCodeText').textContent=orderCode;
       showStep(8);
       poll();
@@ -500,6 +556,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
         var x=rows&&rows[0];
         if(x){
           if(['paid','verified','confirmed'].indexOf(x.payment_status)>=0){
+            trackEvent('payment_verified',{}, {dedupeKey:'payment_verified:'+orderCode,orderCode:orderCode});
             $('statusTitle').textContent='付款已确认';
             $('statusText').textContent='你的院子已经进入方向反馈流程。';
           }
@@ -516,6 +573,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
             $('statusText').textContent='这笔订单已经记录，不会丢失。我们会重新处理，不需要你重复提交。';
           }
           if(x.result_a_path){
+            trackEvent('result_completed',{}, {dedupeKey:'result_completed:'+orderCode,orderCode:orderCode});
             $('statusTitle').textContent='你的方向反馈已完成';
             $('statusText').textContent='先看画面，再看下面的设计建议。';
             var p=x.result_a_path;

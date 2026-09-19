@@ -250,3 +250,131 @@ GPU
 
 真正需要长期沉淀的是：
 **DAYI Prompt System + DAYI Reference Library + DAYI Workflow + 真实订单数据。**
+
+## 14. JSON.zip 解包后的新发现
+压缩包内包含 12 个 JSON，其中真正有价值的生产工作流包括：
+- 线稿 + 文字描述出图
+- 线稿 + 参考图出图
+- 室内毛坯 + 参考图出图
+- 建筑毛坯 + 参考图出图
+- 手动涂抹局部修改
+- 文字识别局部修改
+- 高清放大
+- IPA 风格迁移
+- 文生图 + 深度控制 + 语义分割
+- 文生图
+- 文生图（自动翻译）
+
+### 14.1 「建筑毛坯 + 参考图出图」是 DAYI Garden V1 最值得借鉴的模板
+该工作流已经完整包含：
+- 现状照片输入
+- 风格参考图输入
+- DepthAnythingV2 深度预处理
+- LineartStandard 线稿预处理
+- 双 ControlNet
+- Florence-2 自动反推参考图描述
+- IPAdapter 风格迁移
+- 建筑专用 SDXL 底模
+- 建筑 LoRA
+- 一次多图生成
+- 图片比较与保存
+
+模型与参数：
+- 底模：SDXL建筑大模型.safetensors
+- LoRA：SDXL 建筑/美丽乡村SDXL.safetensors
+- LoRA strength ≈ 0.49
+- Depth ControlNet：SDXL/diffusers_xl_depth_full.safetensors
+- Lineart ControlNet：SDXL/mistoLine_rank256.safetensors
+- Depth ControlNet strength ≈ 0.35
+- Lineart ControlNet strength ≈ 0.30
+- IPAdapter：ip-adapter-plus_sdxl_vit-h.safetensors
+- CLIP Vision：CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors
+- IPAdapter weight ≈ 0.70
+- style transfer
+- KSampler：15 steps / CFG 3 / euler_ancestral / normal / denoise 1
+
+这条链路已经非常接近“真实庭院照片 + 风格参考 → 改造方向图”。
+
+### 14.2 「室内毛坯 + 参考图」与建筑毛坯的共同规律
+两者都采用：
+**Depth + Lineart 双结构约束 + IPAdapter 风格参考 + Florence-2 自动视觉描述 + 专用 SDXL/LoRA**
+
+说明作者稳定下来的最短路径并不是单纯 img2img，而是：
+1. 深度控制体块
+2. 线稿控制边界
+3. IPAdapter 控制风格
+4. Florence-2 负责把参考图转成文字条件
+5. 专用 LoRA 提供领域风格与素材分布
+
+这给 DAYI Garden V1 很强的参考价值。
+
+### 14.3 「线稿 + 参考图」同样使用建筑专用模型
+该工作流使用：
+- SDXL建筑大模型.safetensors
+- SDXL 建筑/建筑外观XL终极版.safetensors
+- Depth ControlNet + Lineart ControlNet
+- IPAdapter weight ≈ 0.70
+
+说明在“建筑/室外”场景里，作者反复依赖同一套结构保持策略。
+
+### 14.4 局部修改链值得放入 V2
+「文字识别局部修改」使用：
+- GroundingDINO：用文字找到目标区域
+- SAM：生成遮罩
+- VAEEncodeForInpaint
+- SDXL + LoRA
+- KSampler 重绘
+
+这意味着未来 DAYI 可以实现：
+“把左侧灌木改成南天竹”
+“把这块铺装改成老石条”
+等自然语言局部修改。
+
+「手动涂抹局部修改」则使用：
+- FLUX.1 dev FP8
+- T5 + CLIP
+- 手工遮罩 / Detailer
+
+两者适合作为 V2，而不是塞进首版。
+
+### 14.5 高清放大链非常轻
+「高清放大」仅使用：
+- 4x-UltraSharp.pth
+- ImageUpscaleWithModel
+- ImageScaleBy
+- SaveImage
+
+这意味着高清放大可作为末端可选步骤，几乎不应影响主生成链的设计。
+
+### 14.6 可初步确定 DAYI Garden V1 的第一版渲染骨架
+建议先以「建筑毛坯 + 参考图」为模板，不从零发明：
+
+客户现场照片
+→ DepthAnythingV2
+→ LineartStandard
+→ Depth ControlNet + Lineart ControlNet
+→ DAYI 风格参考图
+→ Florence-2 视觉描述
+→ IPAdapter
+→ 主模型 + DAYI 领域 LoRA（初期可先用可商用现成模型测试）
+→ 15 steps 左右采样
+→ 生成 2–3 张候选
+→ 质量筛选
+→ 可选 4x-UltraSharp
+→ 回传 Supabase
+
+### 14.7 一个重要发现
+当前压缩包中没有看到名为“景观大模型”或“园林大模型”的模型文件引用。
+明确看到的是：
+- SDXL建筑大模型
+- SDXL室内大模型
+- 建筑外观 LoRA
+- 美丽乡村 LoRA
+- 室内 LoRA
+
+因此，如果老师确实有“景观大模型”，它可能：
+- 在另一套未导出的工作流里
+- 使用了不同文件名，没有直接写“景观”
+- 或属于其私有镜像中的模型，但当前这些 JSON 未调用
+
+这部分不能从当前压缩包进一步确定。

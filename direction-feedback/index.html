@@ -143,6 +143,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
   .upsell{grid-template-columns:1fr}
 }
 .brand-master{width:230px;height:auto;display:block;mix-blend-mode:multiply}#feedback{position:sticky;top:74px;z-index:30;max-width:760px;margin:12px auto 0;padding:12px 18px;color:#9b3b2f;background:#fffdf9;border:1px solid #ded8d1;border-radius:14px;font-size:14px}dialog{border:1px solid #ded8d1;border-radius:22px;max-width:min(500px,90vw);padding:28px;background:#f8f6f3}dialog::backdrop{background:#2226}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #c6402f;outline-offset:4px}@media(max-width:720px){.brand-master{width:205px}#feedback{top:66px;margin:10px 18px 0}}@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+.payment-channel{margin-top:24px;padding:20px 0;border-top:1px solid var(--line)}.payment-channel p{margin-bottom:0}.payment-status{padding:16px 18px;background:var(--paper);border:1px solid var(--line);border-radius:14px;line-height:1.8}.pay-layout[hidden],.qrbox[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -262,7 +263,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
           <p class="sub">付款由大一核对实际到账；确认后自动制作。关闭页面也不会中断，保存订单链接即可回来查看。</p><div class="notice">本产品用于庭院前期方向判断和视觉参考，不替代现场勘测、完整景观设计、施工图及专项工程设计。</div>
         </div>
         <div class="actions">
-          <button class="btn red" id="toPay">确认，去付款 ¥39.9 →</button>
+          <button class="btn red" id="toPay">查看付款方式 · ¥39.9 →</button>
           <button class="mini-back" data-back>← 上一步</button>
         </div>
       </div>
@@ -270,12 +271,15 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
 
     <section class="step" data-step="7">
       <div class="panel">
-        <div class="kicker">完成付款后，就进入结果流程</div>
-        <h2>扫码付款 ¥39.9</h2><p id="paymentOrder" class="sub"></p>
-        <div class="pay-layout">
-          <div class="qrbox">
+        <div class="kicker">庭院改造方向反馈</div>
+        <h2>付款方式</h2>
+        <div class="payment-channel"><strong>富掌柜 · 对公扫码付款</strong><p class="sub">收款方：河北奥纳园林景观设计有限公司<br>商户号：FU28587673 · 本次金额 ¥39.90</p></div>
+        <div id="paymentStatus" class="payment-status" role="status" aria-live="polite">正在确认是否开放付款…</div>
+        <div class="actions"><button id="retryPayment" class="btn ghost" type="button">重新检查付款状态</button><button class="mini-back" data-consult>付款遇到问题？联系大一</button><button class="mini-back" data-back>← 返回确认页</button></div><p id="paymentOrder" class="sub"></p>
+        <div class="pay-layout" id="paymentControls" hidden>
+          <div class="qrbox" id="paymentQr" hidden>
             <img alt="河北奥纳园林景观设计有限公司对公收款二维码" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZoAAAGaAQAAAAAefbjOAAACq0lEQVR42u1cy63jMBDjrAS8owykgJQid7A1paTtwC4lBSwgHQ3I4B70sQK8y76jZ3RInFi8TAYUSckR4r/H/gs/GAYykIEMZCADGeieIGnDA8ApsmYPWXGKyHIKkPuE1aqnBBRJkgnALh5AOATIX0R8f1FWOJIkrXr3B/n2nhcg/gEEcAXID0r1Fc9SJ7QbVj0tHTGNUxC3AiIDiBvalVVPKygUVOGw4hS+LvVg1VPFEYFApYLsgf1JANkVIKR6g1Y9HSDMihGOiOm7lz4hkuRm1bs9R0wEsD8PmRTFvkD4yRBWPQ0c0VjAkVsgudWrAsTkmi1Ft6DGEQo6ov3SgWzrQm2LMSW59tFWDT0c4RozkGW4jnEjNBoxjlDDEVso1XiSybFZ0KE2Ebr4NI7QtGrMliI5IrJ8rinFOkKN1xCEv76FEnUcQuQFNd4GXEF8e6ueGhD59qjhFLII9gWQFY4iTxIIRw0um9q06inQEfWqdJN5qUi47j/MfarSEamrB1S5UFAtaO2SLiFMR+jqCPRIqhlPXv4DmNnCqqcoj7haoBuO2YnYqqGmI0aAXTtiVg9jOTEdoUpZhjmPqLF1JQo2McEtFOMITRyBqie7qJwlRPcfpiNU6YgWNlzLRGuBsa8xEYpV78agkUO6gsjTS0xLPVgpcSvTyVurnjKOYD8LsYUeRWxdUbSZpiNU5RGXyezWo2uL/l0cQtM64v6g65kuvhYAMZ3S9sCzSNvwgO1rqFo1ONxEGYemPonCvIY2r9GDKOCKIq7vrs0N6whloOE0XyLC13JKP4Nr1VPlPsfIvmD/XbwgJCCmR5H49uAuzp4EVtQR/ZkuIj+AmE4QWQCEQ1o8kR5WPT06oo2x2ZmAvtfhOMXblkfcHiT2z2QGMpCBDGQgAxnoh6B/ZD24JcVbvbgAAAAASUVORK5CYII=">
-            <button class="mini-back" id="saveQr" type="button">保存收款码</button><p class="sub">在支付应用中识别，付款后回到此页。</p><div class="merchant">富掌柜 · FU28587673<br>河北奥纳园林景观设计有限公司</div>
+            <button class="mini-back" id="saveQr" type="button" disabled>保存收款码</button><p class="sub">在支付应用中识别，付款后回到此页。</p><div class="merchant">富掌柜 · FU28587673<br>河北奥纳园林景观设计有限公司</div>
           </div>
           <div>
             <div class="pay-price">¥39.90</div>
@@ -287,7 +291,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
               <input id="payProof" type="file" aria-label="付款成功截图" accept="image/jpeg,image/png,image/webp,image/heic,image/heif"><p id="proofStatus" class="sub"></p>
             </div>
             <div class="actions">
-              <button class="btn red" id="submitOrder">我已付款，提交订单 →</button>
+              <button class="btn red" id="submitOrder" disabled>我已付款，提交订单 →</button>
               <button class="mini-back" data-back>← 返回确认页</button>
             </div>
           </div>
@@ -324,7 +328,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
   </main>
 </div>
 
-<script type="module" src="./app.mjs"></script>
+<script type="module" src="./app.mjs?v=20260919-payment2"></script>
 <dialog id="consultDialog"><h2>带着你的院子，继续聊。</h2><p class="sub">添加大一造园，提供本次订单号即可继续沟通。</p><p id="consultOrder"></p><img src="./assets/contact-qr.png" alt="大一造园微信联系方式" style="width:220px;max-width:100%"><div class="actions"><button id="closeConsult" class="btn">知道了</button></div></dialog>
 </body>
 </html>

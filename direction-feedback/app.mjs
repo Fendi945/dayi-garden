@@ -3,17 +3,17 @@ const $=id=>document.getElementById(id);
 function track(event){try{const body={event_name:event,path:location.pathname,source:new URLSearchParams(location.search).get('source')||'direct',session_id:sessionStorage.getItem('dayi_session')||crypto.randomUUID()};sessionStorage.setItem('dayi_session',body.session_id);fetch(SUPABASE_URL+'/rest/v1/analytics_events',{method:'POST',headers:{apikey:PUBLIC_KEY,Authorization:'Bearer '+PUBLIC_KEY,'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:true}).catch(()=>{});}catch{}}
 const STATE_KEY='dayi_checkout_v2';
 let state={step:0,needs:[],style:'',yardSize:'',notes:'',contact:'',request_id:crypto.randomUUID(),access_token:randomToken()};
-let timer,advanceTimer,submitting=false,photo,proof,pollVersion=0;
+let timer,advanceTimer,submitting=false,photo,proof,pollVersion=0,paymentReady=false;
 function randomToken(){return [...crypto.getRandomValues(new Uint8Array(32))].map(x=>x.toString(16).padStart(2,'0')).join('');}
 function save(){try{localStorage.setItem(STATE_KEY,JSON.stringify(state));}catch{message('浏览器暂时不能保存进度，请保存订单链接。');}}
 function message(text){$('feedback').textContent=text;$('feedback').hidden=!text;}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-async function request(action,data={},form=null){
- const options={method:'POST',headers:{apikey:PUBLIC_KEY,Authorization:'Bearer '+PUBLIC_KEY},signal:AbortSignal.timeout(45000)};
+async function request(action,data={},form=null,timeout=45000){
+ const options={method:'POST',headers:{apikey:PUBLIC_KEY,Authorization:'Bearer '+PUBLIC_KEY},signal:AbortSignal.timeout(timeout)};
  if(form){form.set('action',action);for(const[k,v]of Object.entries(data))form.set(k,String(v));options.body=form;}
  else{options.headers['Content-Type']='application/json';options.body=JSON.stringify({action,...data});}
  let r;try{r=await fetch(API_URL,options);}catch{throw new Error('连接暂时中断，请重试。已保存的订单和照片会保留。');}
- const x=await r.json();if(!r.ok)throw new Error(x.message||'本次操作未完成，请稍后重试。');return x;
+ let x;try{x=await r.json();}catch{throw new Error('暂时无法确认付款状态，请重新检查。没有发起扣款。');}if(!r.ok)throw new Error(x.message||'本次操作未完成，请稍后重试。');return x;
 }
 const access=()=>({order_code:state.order_code,access_token:state.access_token});
 function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open('dayi-checkout',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
@@ -44,6 +44,32 @@ function updateOrderLink(){
  const url=new URL(location.href);url.hash=new URLSearchParams({order:state.order_code,key:state.access_token}).toString();
  $('resumeLink').href=url.href;
 }
+function setPaymentStatus(text,ready=false){
+ paymentReady=ready;$('paymentStatus').textContent=text;
+ $('paymentControls').hidden=!ready;$('paymentQr').hidden=!ready;
+ $('submitOrder').disabled=!ready;$('saveQr').disabled=!ready;
+}
+async function preparePayment({resume=false}={}){
+ if(submitting)return;submitting=true;
+ showStep(7);setPaymentStatus('正在确认付款状态，请稍候…');
+ $('paymentOrder').textContent=state.order_code?'订单号：'+state.order_code:'';
+ $('retryPayment').disabled=true;$('toPay').disabled=true;
+ try{
+  const service=await request('status',{},null,12000);
+  if(!service.ready){setPaymentStatus('当前为内部试用，暂未开放收款。付款方式是上方的富掌柜对公扫码；服务准备好后，这里会显示收款码。你的照片和选择已保存在本机，现在无需付款。');return;}
+  if(!resume){
+   if(!state.yardSize||!state.style||!state.needs.length||(!photo&&!state.has_photo))throw new Error('请返回补齐院子照片和需求，完成后即可查看收款码。');
+   setPaymentStatus('付款通道已开放，正在保存你的院子…');
+   const x=await request('create',{request_id:state.request_id,access_token:state.access_token,details:{style:state.style,yard_size:state.yardSize,needs:state.needs,notes:state.notes}});
+   state.order_code=x.order_code;state.has_photo=x.has_photo&&!state.photo_dirty;save();
+   if(!state.has_photo){await upload('yard',photo);state.has_photo=true;state.photo_dirty=false;save();}
+  }
+  if(!state.order_code||!state.has_photo)throw new Error('请先完成现场照片上传，再继续付款。');
+  $('paymentOrder').textContent='订单号：'+state.order_code;
+  setPaymentStatus('可以扫码付款 ¥39.90。请核对收款方名称；付款后回到此页提交凭证，大一核对实际到账后开始处理。',true);
+ }catch(e){setPaymentStatus(e.message+' 请点击下方“重新检查付款状态”，或联系大一。');}
+ finally{submitting=false;$('retryPayment').disabled=false;$('toPay').disabled=false;}
+}
 function bind(){
  document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{if(state.step===5){state.notes=$('notes').value.trim();}showStep(Number(b.dataset.go));}));
  document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>showStep(Math.max(0,state.step-1))));
@@ -57,29 +83,21 @@ function bind(){
  document.querySelectorAll('[name=style]').forEach(r=>r.addEventListener('change',()=>{state.style=r.value;save();clearTimeout(advanceTimer);advanceTimer=setTimeout(()=>showStep(5),280);}));
  $('notes').addEventListener('input',()=>{state.notes=$('notes').value;save();});
  $('contact').addEventListener('input',()=>{state.contact=$('contact').value;save();});
- $('toPay').addEventListener('click',async function(){
-  if(submitting)return;submitting=true;this.disabled=true;this.textContent='正在保存你的院子…';
-  try{
-   if(!state.yardSize||!state.style||!state.needs.length||(!photo&&!state.has_photo))throw new Error('请先完成前面的照片和选择。');
-   const x=await request('create',{request_id:state.request_id,access_token:state.access_token,details:{style:state.style,yard_size:state.yardSize,needs:state.needs,notes:state.notes}});
-   state.order_code=x.order_code;state.has_photo=x.has_photo&&!state.photo_dirty;save();
-   if(!state.has_photo){await upload('yard',photo);state.has_photo=true;state.photo_dirty=false;save();}
-   $('paymentOrder').textContent='订单号：'+state.order_code;showStep(7);
-  }catch(e){message(e.message);}finally{submitting=false;this.disabled=false;this.textContent='确认，去付款 ¥39.9 →';}
- });
+ $('toPay').addEventListener('click',()=>preparePayment());
+ $('retryPayment').addEventListener('click',()=>preparePayment({resume:!!state.order_code&&state.has_photo}));
  $('payProof').addEventListener('change',async function(){
   if(!this.files?.[0])return;this.disabled=true;
   try{proof=await normalizeImage(this.files[0],100);await cachedFile('proof',proof).catch(()=>{});state.has_proof=false;state.proof_dirty=true;save();$('proofStatus').textContent='付款截图已保存，可以提交订单。';}catch(e){message(e.message);}finally{this.disabled=false;}
  });
  $('submitOrder').addEventListener('click',async function(){
-  if(submitting)return;submitting=true;this.disabled=true;this.textContent='正在提交…';
+  if(submitting)return;if(!paymentReady){message('请先确认付款已开放，当前没有发起扣款。');return;}submitting=true;this.disabled=true;this.textContent='正在提交…';
   try{
    state.contact=$('contact').value.trim();save();if(state.contact.length<3)throw new Error('请填写一个用于订单沟通的微信号或手机号。');
    if(!state.has_proof){if(!proof)throw new Error('请上传付款成功截图。');await upload('payment',proof);state.has_proof=true;state.proof_dirty=false;save();}
    await request('submit',{...access(),contact:state.contact});state.submitted=true;save();track('order_submit');showStep(8);poll();
   }catch(e){message(e.message);}finally{submitting=false;this.disabled=false;this.textContent='我已付款，提交订单 →';}
  });
- $('saveQr').addEventListener('click',()=>{const a=document.createElement('a');a.href=document.querySelector('.qrbox img').src;a.download='大一造园_对公收款码.png';a.click();});
+ $('saveQr').addEventListener('click',()=>{if(!paymentReady)return;const a=document.createElement('a');a.href=document.querySelector('.qrbox img').src;a.download='大一造园_对公收款码.png';a.click();});
  $('copyOrder').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('resumeLink').href);message('订单链接已复制，请妥善保存；持有链接的人可以查看本次结果。');}catch{message('请长按“重新查看本次订单”保存链接。');}});
  $('downloadResult').addEventListener('click',async()=>{try{const r=await fetch($('resultImg').src);if(!r.ok)throw Error();const b=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='大一造园_庭院改造方向图.jpg';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),30000);}catch{message('请长按结果图片保存，或重新打开订单再试。');}});
  document.querySelectorAll('[data-consult]').forEach(b=>b.addEventListener('click',()=>{$('consultOrder').textContent=state.order_code||'';$('consultDialog').showModal();}));
@@ -93,7 +111,7 @@ async function poll(){
  clearTimeout(timer);const version=++pollVersion;if(!state.order_code)return;
  try{
   const x=await request('result',access());if(version!==pollVersion)return;state.has_photo=x.has_photo&&!state.photo_dirty;state.has_proof=x.has_proof&&!state.proof_dirty;
-  if(x.checkout_stage==='draft'){state.submitted=false;save();if(!state.has_photo){showStep(1);message('现场照片还未上传完成，请继续上传后再付款。');return;}$('paymentOrder').textContent='订单号：'+state.order_code;showStep(7);return;}
+  if(x.checkout_stage==='draft'){state.submitted=false;save();if(!state.has_photo){showStep(1);message('现场照片还未上传完成，请继续上传后再付款。');return;}await preparePayment({resume:true});return;}
   const messages={waiting_payment_verification:['等待付款确认','付款凭证已提交，核对实际到账后自动开始处理。'],queued:['已进入处理队列','照片和需求已保存，你可以关闭页面，稍后通过订单链接回来。'],generating:['正在整理你的庭院方向','正在生成画面并检查现场关系，结果完成后会在这里出现。'],failed:['这次处理需要继续跟进',x.error_message||'订单已经保留，请通过下方入口联系处理，无需再次付款。']};
   if(x.process_status==='completed'&&x.image_url&&Array.isArray(x.advice)&&x.advice.length===3){
    $('resultImg').src=x.image_url;await $('resultImg').decode();if(version!==pollVersion)return;
@@ -117,6 +135,6 @@ async function init(){
  if(photo){$('photoPreview').src=URL.createObjectURL(photo);$('photoPreview').style.display='block';}
  $('photoNext').disabled=!photo&&!state.has_photo;
  if(proof||state.has_proof)$('proofStatus').textContent='已有付款截图，提交时会继续使用。';
- track('page_view');bind();showStep(state.order_code?8:state.step||0);if(state.order_code)poll();
+ track('page_view');bind();showStep(state.order_code?8:state.step||0);if(state.order_code)poll();else if(state.step===7)preparePayment();
 }
 init();

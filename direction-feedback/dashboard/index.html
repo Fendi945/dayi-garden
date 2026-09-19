@@ -83,6 +83,11 @@ input:focus{border-color:#999}
 .need-tags{display:flex;flex-wrap:wrap;gap:7px}
 .need-tags span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:5px 9px;background:#fff}
 .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.order-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.action-primary{border:0;border-radius:999px;background:var(--red);color:#fff;padding:11px 16px;cursor:pointer}
+.action-primary:disabled{opacity:.5;cursor:not-allowed}
+.action-secondary{border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);padding:11px 16px;cursor:pointer}
+.action-note{font-size:12px;line-height:1.7;color:var(--muted);margin-top:8px}
 @media(max-width:720px){
   .detail-grid,.result-grid{grid-template-columns:1fr}
   .detail-block.full{grid-column:auto}
@@ -302,9 +307,76 @@ input:focus{border-color:#999}
           '<div class="detail-block full"><div class="detail-title">反馈效果图</div>'+results+'</div>'+
           '<div class="detail-block full"><div class="detail-title">3 条设计建议</div>'+adviceHtml+'</div>'+
         '</div>'+
+        '<div class="order-actions">'+
+          ((o.payment_status==='pending_verification'||o.process_status==='waiting_payment_verification')
+            ? '<button class="action-primary" data-confirm-generate="'+esc(o.order_code||'')+'">确认付款并生成</button>'
+            : (o.process_status==='failed'||o.process_status==='pending_generation'||o.process_status==='queued')
+              ? '<button class="action-secondary" data-retry-generate="'+esc(o.order_code||'')+'">重新尝试生成</button>'
+              : '')+
+        '</div>'+
+        '<div id="action_note_'+id+'" class="action-note">'+
+          ((o.payment_status==='pending_verification'||o.process_status==='waiting_payment_verification')
+            ? '核对付款截图无误后再点击。'
+            : '')+
+        '</div>'+
       '</details>'+
     '</div>';
   }
+  async function confirmAndGenerate(orderCode,btn){
+    if(!window.confirm('确认这笔款项已经收到，并让订单进入生成流程吗？')) return;
+    var old=btn.textContent; btn.disabled=true; btn.textContent='正在确认…';
+    var note=$('action_note_'+safeId(orderCode));
+    try{
+      var r=await authFetch(SUPABASE_URL+'/rest/v1/rpc/admin_confirm_direction_feedback_order',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({p_order_code:orderCode})
+      });
+      if(!r.ok) throw new Error('付款确认失败：'+await r.text());
+      btn.textContent='正在启动生成…';
+
+      var g=await authFetch(SUPABASE_URL+'/functions/v1/generate-direction-feedback',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({order_code:orderCode})
+      });
+      var x={}; try{x=await g.json()}catch(e){}
+      if(!g.ok) throw new Error(x.message||x.error||'生成流程启动失败');
+
+      if(x.configured===false){
+        if(note) note.textContent='付款已确认，提示词已生成，订单已进入待生成。当前还差生图模型 API 接入，所以暂时不会自动出图。';
+        btn.textContent='已确认，等待生图 API';
+      }else{
+        if(note) note.textContent='已确认付款，后台生成流程已启动。';
+        btn.textContent='生成已启动';
+      }
+      await loadOrders();
+    }catch(e){
+      if(note) note.textContent=e.message||String(e);
+      btn.disabled=false; btn.textContent=old;
+    }
+  }
+  async function retryGenerate(orderCode,btn){
+    var old=btn.textContent; btn.disabled=true;btn.textContent='正在重试…';
+    var note=$('action_note_'+safeId(orderCode));
+    try{
+      var g=await authFetch(SUPABASE_URL+'/functions/v1/generate-direction-feedback',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({order_code:orderCode})
+      });
+      var x={}; try{x=await g.json()}catch(e){}
+      if(!g.ok) throw new Error(x.message||x.error||'重试失败');
+      if(note) note.textContent=x.configured===false
+        ? '提示词已准备好，但自动生图模型还没有完成 API 接入。'
+        : '生成流程已重新启动。';
+      await loadOrders();
+    }catch(e){
+      if(note) note.textContent=e.message||String(e);
+      btn.disabled=false;btn.textContent=old;
+    }
+  }
+
   async function loadOrders(){
     var fields='order_code,created_at,amount_cny,payment_status,process_status,contact,yard_size,needs,style,notes,photo_path,payment_proof_path,prompt,result_a_path,result_b_path,advice_json';
     var q='?select='+fields+'&order=created_at.desc&limit=10';
@@ -324,6 +396,13 @@ input:focus{border-color:#999}
         if(row.photo_path)loadPrivateOrderImage(row.photo_path,'yard_'+id,'yard_ph_'+id);
         if(row.payment_proof_path)loadPrivateOrderImage(row.payment_proof_path,'pay_'+id,'pay_ph_'+id);
       });
+    });
+
+    document.querySelectorAll('[data-confirm-generate]').forEach(function(btn){
+      btn.addEventListener('click',function(){confirmAndGenerate(btn.getAttribute('data-confirm-generate'),btn)});
+    });
+    document.querySelectorAll('[data-retry-generate]').forEach(function(btn){
+      btn.addEventListener('click',function(){retryGenerate(btn.getAttribute('data-retry-generate'),btn)});
     });
   }
 

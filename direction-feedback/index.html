@@ -32,7 +32,7 @@ button{cursor:pointer}
 .brand-one{position:relative;display:inline-block}
 .brand-one:after{
   content:"";position:absolute;width:6px;height:6px;border-radius:50%;
-  background:var(--red);left:50%;transform:translateX(-50%);top:-9px
+  background:var(--red);left:50%;transform:translateX(-50%);top:-5px
 }
 .brand-cn{font-size:12px;letter-spacing:.17em;color:#4d4945}
 .top-note{font-size:10px;letter-spacing:.18em;color:#99918a}
@@ -169,7 +169,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
 
     <section class="step" data-step="1">
       <div class="panel">
-        <div class="step-no">01 / 07</div>
+        <div class="step-no">01 / 06</div>
         <div class="question">
           <h2>先让我看看你的院子。</h2>
           <p class="sub">上传一张最能看清现场关系的照片。尽量让地面、围墙、建筑和主要空间同时出现在画面里。</p>
@@ -187,7 +187,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
 
     <section class="step" data-step="2">
       <div class="panel">
-        <div class="step-no">02 / 07</div>
+        <div class="step-no">02 / 06</div>
         <div class="question">
           <h2>你的院子，大约多大？</h2>
           <p class="sub">不用精确测量，先选一个最接近的范围。</p>
@@ -199,7 +199,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
 
     <section class="step" data-step="3">
       <div class="panel">
-        <div class="step-no">03 / 07</div>
+        <div class="step-no">03 / 06</div>
         <div class="question">
           <h2>你最希望这个院子解决什么问题？</h2>
           <p class="sub">可以多选。先选真正影响你日常生活的，不需要想“设计语言”。</p>
@@ -214,7 +214,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
 
     <section class="step" data-step="4">
       <div class="panel">
-        <div class="step-no">04 / 07</div>
+        <div class="step-no">04 / 06</div>
         <div class="question">
           <h2>你更喜欢哪种感觉？</h2>
           <p class="sub">不用懂风格名称，选最接近你想过的生活。</p>
@@ -226,7 +226,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
 
     <section class="step" data-step="5">
       <div class="panel">
-        <div class="step-no">05 / 07</div>
+        <div class="step-no">05 / 06</div>
         <div class="question">
           <h2>还有哪一件事，你特别在意？</h2>
           <p class="sub">比如怕墙根返潮、家里有老人、想保留一棵树、不想大面积硬化、预算有限。没有也可以直接继续。</p>
@@ -241,22 +241,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
 
     <section class="step" data-step="6">
       <div class="panel">
-        <div class="step-no">06 / 07</div>
-        <div class="question">
-          <h2>最后，留一个联系方式。</h2>
-          <p class="sub">微信号或手机号即可，只用于订单沟通和结果异常时联系你。</p>
-        </div>
-        <input id="contact" type="text" placeholder="微信号或手机号">
-        <div class="actions">
-          <button class="btn red" id="contactNext">继续 →</button>
-          <button class="mini-back" data-back>← 上一步</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="step" data-step="7">
-      <div class="panel">
-        <div class="step-no">07 / 07</div>
+        <div class="step-no">06 / 06</div>
         <div class="question">
           <h2>先看方向，再决定要不要继续深入。</h2>
           <p class="sub">这是一次庭院改造方向反馈，不是完整设计方案。</p>
@@ -283,7 +268,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
       </div>
     </section>
 
-    <section class="step" data-step="8">
+    <section class="step" data-step="7">
       <div class="panel">
         <div class="kicker">完成付款后，就进入结果流程</div>
         <h2>扫码付款 ¥39.9</h2>
@@ -294,7 +279,10 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
           </div>
           <div>
             <div class="pay-price">¥39.90</div>
-            <p class="sub">请扫码完成付款。付款后上传付款成功截图，我们会把这笔订单与你刚刚填写的院子信息绑定。</p>
+            <p class="sub">请扫码完成付款。付款后填写一个联系方式并上传付款成功截图，我们会把这笔订单与你刚刚填写的院子信息绑定。</p>
+            <div style="margin-top:20px">
+              <input id="contact" type="text" placeholder="微信号或手机号，仅用于订单沟通">
+            </div>
             <div class="file-proof">
               <input id="payProof" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif">
             </div>
@@ -307,7 +295,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
       </div>
     </section>
 
-    <section class="step" data-step="9">
+    <section class="step" data-step="8">
       <div class="panel">
         <div class="kicker">订单已提交</div>
         <h2>收到。现在开始看你的院子。</h2>
@@ -355,7 +343,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
     document.querySelectorAll('.step').forEach(function(el){
       el.classList.toggle('active', Number(el.getAttribute('data-step'))===n);
     });
-    var pct=n===0?0:(n>=9?100:Math.min(96,Math.round((n/8)*100)));
+    var pct=n===0?0:(n>=8?100:Math.min(96,Math.round((n/7)*96)));
     $('progress').style.width=pct+'%';
     window.scrollTo({top:0,behavior:'smooth'});
     if(n===7) renderSummary();
@@ -396,10 +384,6 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
       style=this.value;
       setTimeout(function(){showStep(5)},160);
     });
-  });
-  $('contactNext').addEventListener('click',function(){
-    if(!$('contact').value.trim()){alert('请留下微信号或手机号');return}
-    showStep(7);
   });
 
   function renderSummary(){
@@ -442,12 +426,12 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
   }
 
   $('toPay').addEventListener('click',function(){
-    if(!photoFile||!yardSize||!selectedNeeds().length||!style||!$('contact').value.trim()){
+    if(!photoFile||!yardSize||!selectedNeeds().length||!style){
       alert('前面的信息还没有填写完整，请返回检查。');
       return;
     }
     if(!orderCode) orderCode=makeCode();
-    showStep(8);
+    showStep(7);
   });
 
   $('payProof').addEventListener('change',function(){
@@ -456,6 +440,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
 
   $('submitOrder').addEventListener('click',async function(){
     var btn=this;
+    if(!$('contact').value.trim()){alert('请填写微信号或手机号');return}
     if(!proofFile){alert('请上传付款成功截图');return}
     if(!photoFile){alert('院子照片丢失，请返回重新上传');showStep(1);return}
     btn.disabled=true;
@@ -493,7 +478,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
 
       localStorage.setItem('dayi_last_order',orderCode);
       $('orderCodeText').textContent=orderCode;
-      showStep(9);
+      showStep(8);
       poll();
     }catch(err){
       alert(err.message||String(err));

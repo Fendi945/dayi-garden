@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>庭院改造方向反馈｜大一造园</title>
 <meta name="description" content="上传真实院子照片，获得一版庭院改造方向反馈：1张方向图 + 3条设计建议。">
 <style>
@@ -141,23 +142,22 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
   .offer-top{align-items:flex-start;flex-direction:column}
   .upsell{grid-template-columns:1fr}
 }
+.brand-master{width:230px;height:auto;display:block;mix-blend-mode:multiply}#feedback{position:sticky;top:74px;z-index:30;max-width:760px;margin:12px auto 0;padding:12px 18px;color:#9b3b2f;background:#fffdf9;border:1px solid #ded8d1;border-radius:14px;font-size:14px}dialog{border:1px solid #ded8d1;border-radius:22px;max-width:min(500px,90vw);padding:28px;background:#f8f6f3}dialog::backdrop{background:#2226}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #c6402f;outline-offset:4px}@media(max-width:720px){.brand-master{width:205px}#feedback{top:66px;margin:10px 18px 0}}@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="shell">
   <header class="topbar">
-    <div class="brand-lockup">
-      <div class="brand-word">day<span class="brand-one">1</span></div>
-      <div class="brand-cn">大一造园</div>
-    </div>
+    <div class="brand-lockup"><img class="brand-master" src="./assets/dayi-master-v1.6.png" alt="dayi 大一造园"></div>
     <div class="top-note">NATURAL / MINIMAL / LASTING</div>
   </header>
   <div class="progress-track"><div id="progress" class="progress"></div></div>
 
+  <div id="feedback" role="status" aria-live="polite" hidden></div>
   <main class="stage">
     <section class="step active" data-step="0">
       <div class="panel">
-        <div class="kicker">庭院改造方向反馈 · V0.1</div>
+        <div class="kicker">庭院改造方向反馈</div>
         <h1>上传你的院子，<br>先看看它可能变成什么样。</h1>
         <p class="lead">不用先做完整设计。先用一次轻量的方向判断，把真实现场和你的生活需求，变成一个可以看见的改造方向。</p>
         <div class="hero-actions">
@@ -231,7 +231,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
           <h2>还有哪一件事，你特别在意？</h2>
           <p class="sub">比如怕墙根返潮、家里有老人、想保留一棵树、不想大面积硬化、预算有限。没有也可以直接继续。</p>
         </div>
-        <textarea id="notes" placeholder="写下一件你最不希望我们忽略的事……"></textarea>
+        <textarea id="notes" maxlength="1600" placeholder="写下一件你最不希望我们忽略的事……"></textarea>
         <div class="actions">
           <button class="btn red" data-go="6">继续 →</button>
           <button class="mini-back" data-back>← 上一步</button>
@@ -259,7 +259,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
             <div class="deliverable"><b>02</b><div><strong>3 条设计建议</strong><br><span class="sub">告诉你空间方向、优先级，以及暂时别急着做的地方。</span></div></div>
           </div>
           <div id="summary" class="summary"></div>
-          <div class="notice">本产品用于庭院前期方向判断和视觉参考，不替代现场勘测、完整景观设计、施工图及专项工程设计。</div>
+          <p class="sub">付款由大一核对实际到账；确认后自动制作。关闭页面也不会中断，保存订单链接即可回来查看。</p><div class="notice">本产品用于庭院前期方向判断和视觉参考，不替代现场勘测、完整景观设计、施工图及专项工程设计。</div>
         </div>
         <div class="actions">
           <button class="btn red" id="toPay">确认，去付款 ¥39.9 →</button>
@@ -271,20 +271,20 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
     <section class="step" data-step="7">
       <div class="panel">
         <div class="kicker">完成付款后，就进入结果流程</div>
-        <h2>扫码付款 ¥39.9</h2>
+        <h2>扫码付款 ¥39.9</h2><p id="paymentOrder" class="sub"></p>
         <div class="pay-layout">
           <div class="qrbox">
             <img alt="河北奥纳园林景观设计有限公司对公收款二维码" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZoAAAGaAQAAAAAefbjOAAACq0lEQVR42u1cy63jMBDjrAS8owykgJQid7A1paTtwC4lBSwgHQ3I4B70sQK8y76jZ3RInFi8TAYUSckR4r/H/gs/GAYykIEMZCADGeieIGnDA8ApsmYPWXGKyHIKkPuE1aqnBBRJkgnALh5AOATIX0R8f1FWOJIkrXr3B/n2nhcg/gEEcAXID0r1Fc9SJ7QbVj0tHTGNUxC3AiIDiBvalVVPKygUVOGw4hS+LvVg1VPFEYFApYLsgf1JANkVIKR6g1Y9HSDMihGOiOm7lz4hkuRm1bs9R0wEsD8PmRTFvkD4yRBWPQ0c0VjAkVsgudWrAsTkmi1Ft6DGEQo6ov3SgWzrQm2LMSW59tFWDT0c4RozkGW4jnEjNBoxjlDDEVso1XiSybFZ0KE2Ebr4NI7QtGrMliI5IrJ8rinFOkKN1xCEv76FEnUcQuQFNd4GXEF8e6ueGhD59qjhFLII9gWQFY4iTxIIRw0um9q06inQEfWqdJN5qUi47j/MfarSEamrB1S5UFAtaO2SLiFMR+jqCPRIqhlPXv4DmNnCqqcoj7haoBuO2YnYqqGmI0aAXTtiVg9jOTEdoUpZhjmPqLF1JQo2McEtFOMITRyBqie7qJwlRPcfpiNU6YgWNlzLRGuBsa8xEYpV78agkUO6gsjTS0xLPVgpcSvTyVurnjKOYD8LsYUeRWxdUbSZpiNU5RGXyezWo2uL/l0cQtM64v6g65kuvhYAMZ3S9sCzSNvwgO1rqFo1ONxEGYemPonCvIY2r9GDKOCKIq7vrs0N6whloOE0XyLC13JKP4Nr1VPlPsfIvmD/XbwgJCCmR5H49uAuzp4EVtQR/ZkuIj+AmE4QWQCEQ1o8kR5WPT06oo2x2ZmAvtfhOMXblkfcHiT2z2QGMpCBDGQgAxnoh6B/ZD24JcVbvbgAAAAASUVORK5CYII=">
-            <div class="merchant">富掌柜 · FU28587673<br>河北奥纳园林景观设计有限公司</div>
+            <button class="mini-back" id="saveQr" type="button">保存收款码</button><p class="sub">在支付应用中识别，付款后回到此页。</p><div class="merchant">富掌柜 · FU28587673<br>河北奥纳园林景观设计有限公司</div>
           </div>
           <div>
             <div class="pay-price">¥39.90</div>
             <p class="sub">请扫码完成付款。付款后填写一个联系方式并上传付款成功截图，我们会把这笔订单与你刚刚填写的院子信息绑定。</p>
             <div style="margin-top:20px">
-              <input id="contact" type="text" placeholder="微信号或手机号，仅用于订单沟通">
+              <input aria-label="微信号或手机号" id="contact" type="text" placeholder="微信号或手机号，仅用于订单沟通">
             </div>
             <div class="file-proof">
-              <input id="payProof" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif">
+              <input id="payProof" type="file" aria-label="付款成功截图" accept="image/jpeg,image/png,image/webp,image/heic,image/heif"><p id="proofStatus" class="sub"></p>
             </div>
             <div class="actions">
               <button class="btn red" id="submitOrder">我已付款，提交订单 →</button>
@@ -306,14 +306,16 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
             <strong id="statusTitle">等待付款确认</strong>
             <p id="statusText">付款凭证已经提交，确认后会进入方向反馈流程。</p>
           </div>
+          <div class="actions"><a id="resumeLink" class="mini-back">重新查看本次订单</a><button id="copyOrder" class="mini-back">复制订单链接</button><button id="retryStatus" class="mini-back">刷新进度</button><button class="mini-back" data-consult>订单帮助</button></div>
           <div id="resultBox" class="hidden">
             <img id="resultImg" class="result-img" alt="庭院改造方向图">
-            <h3 style="font-family:Georgia,'Noto Serif SC','Songti SC',serif;font-weight:500">大一的 3 条建议</h3>
+            <details><summary>对照原院照片</summary><img id="originalImg" class="result-img" alt="庭院原始照片"></details><button id="newOrder" class="mini-back">为另一个院子开始</button><button id="downloadResult" class="btn ghost">保存方向图</button>
+            <h3 style="font-family:Georgia,'Noto Serif SC','Songti SC',serif;font-weight:500">本次方向的 3 条建议</h3>
             <div id="advice" class="advice"></div>
             <div class="upsell">
-              <div><b>想换一个方向？</b><span>第 2 张方向反馈 · ¥29.9</span></div>
-              <div><b>需要更具体的判断？</b><span>专业咨询 · ¥199 起</span></div>
-              <div><b>准备进入施工前阶段？</b><span>庭院骨架方案 · ¥499</span></div>
+              <div><button class="mini-back" data-consult>了解第二个方向</button><b>想换一个方向？</b><span>第 2 张方向反馈 · ¥29.9</span></div>
+              <div><button class="mini-back" data-consult>带着本次结果咨询</button><b>需要更具体的判断？</b><span>专业咨询 · ¥199 起</span></div>
+              <div><button class="mini-back" data-consult>了解骨架方案</button><b>准备进入施工前阶段？</b><span>庭院骨架方案 · ¥499</span></div>
             </div>
           </div>
         </div>
@@ -322,279 +324,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
   </main>
 </div>
 
-<script>
-(function(){
-  var SUPABASE_URL='https://fhvhnibznphatfnbvvnb.supabase.co';
-  var ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZodmhuaWJ6bnBoYXRmbmJ2dm5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3MzMzNDgsImV4cCI6MjEwNTMwOTM0OH0.OSuLOzcuMLmPnZ17EMaz6lXrOY4CGgBJWMV96HHg1LU';
-  var PRICE=39.9;
-  var current=0;
-  var orderCode='';
-  var photoFile=null;
-  var proofFile=null;
-  var yardSize='';
-  var style='';
-  var $=function(id){return document.getElementById(id)};
-
-  // Lightweight anonymous product analytics for V0.1 market validation.
-  var queryParams=new URLSearchParams(window.location.search);
-  var trafficSource=(queryParams.get('source')||queryParams.get('utm_source')||'').trim();
-  if(!trafficSource){
-    try{trafficSource=document.referrer?new URL(document.referrer).hostname:'direct'}catch(e){trafficSource='direct'}
-  }
-  trafficSource=(trafficSource||'direct').slice(0,120);
-  var analyticsSession=localStorage.getItem('dayi_analytics_session');
-  if(!analyticsSession){
-    analyticsSession=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'sess-'+Date.now()+'-'+Math.random().toString(36).slice(2,12);
-    localStorage.setItem('dayi_analytics_session',analyticsSession);
-  }
-  var sentEvents={};
-  function analyticsMeta(extra){
-    var m={
-      utm_medium:(queryParams.get('utm_medium')||'').slice(0,120),
-      utm_campaign:(queryParams.get('utm_campaign')||'').slice(0,120)
-    };
-    if(extra){Object.keys(extra).forEach(function(k){m[k]=extra[k]})}
-    return m;
-  }
-  function trackEvent(name,extra,opts){
-    opts=opts||{};
-    var dedupeKey=opts.dedupeKey||name;
-    if(opts.once!==false && sentEvents[dedupeKey]) return;
-    if(opts.once!==false) sentEvents[dedupeKey]=true;
-    var row={
-      session_id:analyticsSession,
-      event_name:String(name).slice(0,80),
-      source:trafficSource,
-      path:window.location.pathname.slice(0,240),
-      order_code:opts.orderCode||null,
-      metadata:analyticsMeta(extra||{})
-    };
-    fetch(SUPABASE_URL+'/rest/v1/analytics_events',{
-      method:'POST',
-      headers:apiHeaders({'Content-Type':'application/json','Prefer':'return=minimal'}),
-      body:JSON.stringify(row),
-      keepalive:true
-    }).catch(function(){});
-  }
-
-  trackEvent('page_view',{viewport_width:window.innerWidth||0});
-
-  function selectedNeeds(){
-    return Array.from(document.querySelectorAll('#needs input:checked')).map(function(x){return x.value});
-  }
-  function showStep(n){
-    current=n;
-    document.querySelectorAll('.step').forEach(function(el){
-      el.classList.toggle('active', Number(el.getAttribute('data-step'))===n);
-    });
-    var pct=n===0?0:(n>=8?100:Math.min(96,Math.round((n/7)*96)));
-    $('progress').style.width=pct+'%';
-    window.scrollTo({top:0,behavior:'smooth'});
-    if(n===6){ renderSummary(); trackEvent('offer_view',{step:n}); }
-    if(n===7) trackEvent('payment_page_view',{step:n});
-  }
-  document.querySelectorAll('[data-go]').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      var target=Number(btn.getAttribute('data-go'));
-      if(current===0 && target===1) trackEvent('start_click',{target_step:1});
-      if(current===5 && target===6) trackEvent('notes_completed',{has_notes:!!$('notes').value.trim()});
-      showStep(target);
-    });
-  });
-  document.querySelectorAll('[data-back]').forEach(function(btn){
-    btn.addEventListener('click',function(){showStep(Math.max(0,current-1))});
-  });
-
-  $('yardPhoto').addEventListener('change',function(){
-    photoFile=this.files&&this.files[0];
-    $('photoNext').disabled=!photoFile;
-    if(photoFile){
-      var p=$('photoPreview');
-      p.src=URL.createObjectURL(photoFile);
-      p.style.display='block';
-      trackEvent('photo_uploaded',{file_type:(photoFile.type||'unknown').slice(0,80)});
-    }
-  });
-  $('photoNext').addEventListener('click',function(){
-    if(!photoFile){alert('请先上传一张院子照片');return}
-    showStep(2);
-  });
-
-  document.querySelectorAll('input[name="yardSize"]').forEach(function(r){
-    r.addEventListener('change',function(){
-      yardSize=this.value;
-      trackEvent('yard_size_completed',{yard_size:yardSize});
-      setTimeout(function(){showStep(3)},160);
-    });
-  });
-  $('needsNext').addEventListener('click',function(){
-    if(!selectedNeeds().length){alert('请至少选择一个你最希望解决的问题');return}
-    trackEvent('needs_completed',{needs_count:selectedNeeds().length});
-    showStep(4);
-  });
-  document.querySelectorAll('input[name="style"]').forEach(function(r){
-    r.addEventListener('change',function(){
-      style=this.value;
-      trackEvent('style_completed',{style:style});
-      setTimeout(function(){showStep(5)},160);
-    });
-  });
-
-  function renderSummary(){
-    $('summary').innerHTML=
-      '院子面积：'+escapeHtml(yardSize||'未选择')+'<br>'+
-      '主要需求：'+escapeHtml(selectedNeeds().join('、')||'未选择')+'<br>'+
-      '偏好方向：'+escapeHtml(style||'未选择');
-  }
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g,function(c){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c];
-    });
-  }
-  function makeCode(){
-    var d=new Date();
-    var y=String(d.getFullYear()).slice(-2);
-    var m=String(d.getMonth()+1).padStart(2,'0');
-    var day=String(d.getDate()).padStart(2,'0');
-    return 'DAY1-'+y+m+day+'-'+Math.random().toString(36).slice(2,8).toUpperCase();
-  }
-  function ext(file){
-    var n=file.name||'';
-    var x=n.split('.').pop().toLowerCase();
-    return x&&x.length<6?x:'jpg';
-  }
-  function apiHeaders(extra){
-    var h={'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY};
-    if(extra){Object.keys(extra).forEach(function(k){h[k]=extra[k]})}
-    return h;
-  }
-  function encPath(p){return p.split('/').map(encodeURIComponent).join('/')}
-  async function upload(file,path){
-    var r=await fetch(SUPABASE_URL+'/storage/v1/object/order-photos/'+encPath(path),{
-      method:'POST',
-      headers:apiHeaders({'Content-Type':file.type||'application/octet-stream','x-upsert':'false'}),
-      body:file
-    });
-    if(!r.ok) throw new Error('图片上传失败：'+await r.text());
-    return path;
-  }
-
-  $('toPay').addEventListener('click',function(){
-    if(!photoFile||!yardSize||!selectedNeeds().length||!style){
-      alert('前面的信息还没有填写完整，请返回检查。');
-      return;
-    }
-    if(!orderCode) orderCode=makeCode();
-    showStep(7);
-  });
-
-  $('payProof').addEventListener('change',function(){
-    proofFile=this.files&&this.files[0];
-    if(proofFile) trackEvent('payment_proof_uploaded',{file_type:(proofFile.type||'unknown').slice(0,80)});
-  });
-
-  $('submitOrder').addEventListener('click',async function(){
-    var btn=this;
-    if(!$('contact').value.trim()){alert('请填写微信号或手机号');return}
-    if(!proofFile){alert('请上传付款成功截图');return}
-    if(!photoFile){alert('院子照片丢失，请返回重新上传');showStep(1);return}
-    btn.disabled=true;
-    btn.textContent='正在提交…';
-    try{
-      if(!orderCode) orderCode=makeCode();
-      var yardPath='incoming/'+orderCode+'/yard.'+ext(photoFile);
-      var payPath='incoming/'+orderCode+'/payment.'+ext(proofFile);
-      await upload(photoFile,yardPath);
-      await upload(proofFile,payPath);
-
-      var payload={
-        order_code:orderCode,
-        contact:$('contact').value.trim(),
-        notes:$('notes').value.trim(),
-        photo_urls:JSON.stringify([yardPath]),
-        photo_path:yardPath,
-        style:style,
-        style_desc:style,
-        owner_type:'private_yard',
-        yard_size:yardSize,
-        maintenance_level:'',
-        needs:selectedNeeds(),
-        product_code:'direction_feedback_1',
-        amount_cny:PRICE,
-        payment_method:'corporate_qr_manual',
-        payment_proof_path:payPath
-      };
-      var r=await fetch(SUPABASE_URL+'/rest/v1/orders',{
-        method:'POST',
-        headers:apiHeaders({'Content-Type':'application/json','Prefer':'return=minimal'}),
-        body:JSON.stringify(payload)
-      });
-      if(!r.ok) throw new Error('订单提交失败：'+await r.text());
-
-      localStorage.setItem('dayi_last_order',orderCode);
-      trackEvent('order_submitted',{amount_cny:PRICE,product_code:'direction_feedback_1'},{dedupeKey:'order_submitted:'+orderCode,orderCode:orderCode});
-      $('orderCodeText').textContent=orderCode;
-      showStep(8);
-      poll();
-    }catch(err){
-      alert(err.message||String(err));
-      btn.disabled=false;
-      btn.textContent='我已付款，提交订单 →';
-    }
-  });
-
-  async function poll(){
-    if(!orderCode) return;
-    try{
-      var r=await fetch(SUPABASE_URL+'/rest/v1/rpc/get_direction_feedback_result',{
-        method:'POST',
-        headers:apiHeaders({'Content-Type':'application/json'}),
-        body:JSON.stringify({p_order_code:orderCode})
-      });
-      if(r.ok){
-        var rows=await r.json();
-        var x=rows&&rows[0];
-        if(x){
-          if(['paid','verified','confirmed'].indexOf(x.payment_status)>=0){
-            trackEvent('payment_verified',{}, {dedupeKey:'payment_verified:'+orderCode,orderCode:orderCode});
-            $('statusTitle').textContent='付款已确认';
-            $('statusText').textContent='你的院子已经进入方向反馈流程。';
-          }
-          if(['queued','pending_generation'].indexOf(x.process_status)>=0){
-            $('statusTitle').textContent='已进入生成队列';
-            $('statusText').textContent='现场照片和需求已整理，正在等待生成。';
-          }
-          if(x.process_status==='generating'){
-            $('statusTitle').textContent='正在生成方向反馈';
-            $('statusText').textContent='正在识别现场、整理需求并生成画面。';
-          }
-          if(x.process_status==='failed'){
-            $('statusTitle').textContent='生成遇到问题';
-            $('statusText').textContent='这笔订单已经记录，不会丢失。我们会重新处理，不需要你重复提交。';
-          }
-          if(x.result_a_path){
-            trackEvent('result_completed',{}, {dedupeKey:'result_completed:'+orderCode,orderCode:orderCode});
-            $('statusTitle').textContent='你的方向反馈已完成';
-            $('statusText').textContent='先看画面，再看下面的设计建议。';
-            var p=x.result_a_path;
-            $('resultImg').src=/^https?:/.test(p)?p:SUPABASE_URL+'/storage/v1/object/public/order-results/'+p.replace(/^\/+/, '');
-            var arr=Array.isArray(x.advice_json)?x.advice_json:[];
-            if(arr.length){
-              $('advice').innerHTML=arr.slice(0,3).map(function(t,i){
-                return '<div><b>0'+(i+1)+'</b>｜'+escapeHtml(String(t))+'</div>';
-              }).join('');
-            }else{
-              $('advice').innerHTML='<div>设计建议正在整理中，完成后会一起显示在这里。</div>';
-            }
-            $('resultBox').classList.remove('hidden');
-            return;
-          }
-        }
-      }
-    }catch(e){}
-    setTimeout(poll,12000);
-  }
-})();
-</script>
+<script type="module" src="./app.mjs"></script>
+<dialog id="consultDialog"><h2>带着你的院子，继续聊。</h2><p class="sub">添加大一造园，提供本次订单号即可继续沟通。</p><p id="consultOrder"></p><img src="./assets/contact-qr.png" alt="大一造园微信联系方式" style="width:220px;max-width:100%"><div class="actions"><button id="closeConsult" class="btn">知道了</button></div></dialog>
 </body>
 </html>

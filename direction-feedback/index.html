@@ -346,7 +346,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
     var pct=n===0?0:(n>=8?100:Math.min(96,Math.round((n/7)*96)));
     $('progress').style.width=pct+'%';
     window.scrollTo({top:0,behavior:'smooth'});
-    if(n===7) renderSummary();
+    if(n===6) renderSummary();
   }
   document.querySelectorAll('[data-go]').forEach(function(btn){
     btn.addEventListener('click',function(){showStep(Number(btn.getAttribute('data-go')))});

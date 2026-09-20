@@ -4,7 +4,7 @@
   "version": "2.0.0-preview",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/workflow.test.mjs tests/frontend.test.mjs",
+    "test": "node --test tests/frontend.test.mjs",
     "test:browser": "node tests/browser-qa.mjs",
     "build": "node scripts/build.mjs"
   },

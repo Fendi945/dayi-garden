@@ -46,28 +46,26 @@ function updateOrderLink(){
 }
 function setPaymentStatus(text,ready=false){
  paymentReady=ready;$('paymentStatus').textContent=text;
- $('paymentControls').hidden=!ready;$('paymentQr').hidden=!ready;
- $('submitOrder').disabled=!ready;$('saveQr').disabled=!ready;
+ $('paymentControls').hidden=false;$('paymentQr').hidden=false;
+ $('submitOrder').disabled=!ready;$('saveQr').disabled=false;
 }
 async function preparePayment({resume=false}={}){
  if(submitting)return;submitting=true;
- showStep(7);setPaymentStatus('正在确认付款状态，请稍候…');
+ showStep(7);setPaymentStatus('正在保存你的院子与需求，请稍候…');
  $('paymentOrder').textContent=state.order_code?'订单号：'+state.order_code:'';
  $('retryPayment').disabled=true;$('toPay').disabled=true;
  try{
-  const service=await request('status',{},null,12000);
-  if(!service.ready){setPaymentStatus('当前为内部试用，暂未开放收款。付款方式是上方的富掌柜对公扫码；服务准备好后，这里会显示收款码。你的照片和选择已保存在本机，现在无需付款。');return;}
   if(!resume){
-   if(!state.yardSize||!state.style||!state.needs.length||(!photo&&!state.has_photo))throw new Error('请返回补齐院子照片和需求，完成后即可查看收款码。');
-   setPaymentStatus('付款通道已开放，正在保存你的院子…');
+   if(!state.yardSize||!state.style||!state.needs.length||(!photo&&!state.has_photo))throw new Error('请返回补齐院子照片和需求，完成后即可提交订单。');
+   setPaymentStatus('正在保存你的院子与需求…');
    const x=await request('create',{request_id:state.request_id,access_token:state.access_token,details:{style:state.style,yard_size:state.yardSize,needs:state.needs,notes:state.notes}});
    state.order_code=x.order_code;state.has_photo=x.has_photo&&!state.photo_dirty;save();
    if(!state.has_photo){await upload('yard',photo);state.has_photo=true;state.photo_dirty=false;save();}
   }
   if(!state.order_code||!state.has_photo)throw new Error('请先完成现场照片上传，再继续付款。');
   $('paymentOrder').textContent='订单号：'+state.order_code;
-  setPaymentStatus('可以扫码付款 ¥39.90。请核对收款方名称；付款后回到此页提交凭证，大一核对实际到账后开始处理。',true);
- }catch(e){setPaymentStatus(e.message+' 请点击下方“重新检查付款状态”，或联系大一。');}
+  setPaymentStatus('可以扫码付款 ¥39.90。请核对收款方名称；付款后回到此页提交凭证，大一核对实际到账后安排反馈。',true);
+ }catch(e){setPaymentStatus(e.message+' 请点击下方“重新保存订单”，或联系大一。');}
  finally{submitting=false;$('retryPayment').disabled=false;$('toPay').disabled=false;}
 }
 function bind(){
@@ -90,14 +88,14 @@ function bind(){
   try{proof=await normalizeImage(this.files[0],100);await cachedFile('proof',proof).catch(()=>{});state.has_proof=false;state.proof_dirty=true;save();$('proofStatus').textContent='付款截图已保存，可以提交订单。';}catch(e){message(e.message);}finally{this.disabled=false;}
  });
  $('submitOrder').addEventListener('click',async function(){
-  if(submitting)return;if(!paymentReady){message('请先确认付款已开放，当前没有发起扣款。');return;}submitting=true;this.disabled=true;this.textContent='正在提交…';
+  if(submitting)return;if(!paymentReady){message('订单尚未保存完成，请点击“重新保存订单”；已付款请保留截图或联系大一。');return;}submitting=true;this.disabled=true;this.textContent='正在提交…';
   try{
    state.contact=$('contact').value.trim();save();if(state.contact.length<3)throw new Error('请填写一个用于订单沟通的微信号或手机号。');
    if(!state.has_proof){if(!proof)throw new Error('请上传付款成功截图。');await upload('payment',proof);state.has_proof=true;state.proof_dirty=false;save();}
    await request('submit',{...access(),contact:state.contact});state.submitted=true;save();track('order_submit');showStep(8);poll();
   }catch(e){message(e.message);}finally{submitting=false;this.disabled=false;this.textContent='我已付款，提交订单 →';}
  });
- $('saveQr').addEventListener('click',()=>{if(!paymentReady)return;const a=document.createElement('a');a.href=document.querySelector('.qrbox img').src;a.download='大一造园_对公收款码.png';a.click();});
+ $('saveQr').addEventListener('click',()=>{const a=document.createElement('a');a.href=new URL('./assets/company-payment-qr.png',location.href).href;a.download='大一造园_对公收款码.png';a.click();});
  $('copyOrder').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('resumeLink').href);message('订单链接已复制，请妥善保存；持有链接的人可以查看本次结果。');}catch{message('请长按“重新查看本次订单”保存链接。');}});
  $('downloadResult').addEventListener('click',async()=>{try{const r=await fetch($('resultImg').src);if(!r.ok)throw Error();const b=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='大一造园_庭院改造方向图.jpg';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),30000);}catch{message('请长按结果图片保存，或重新打开订单再试。');}});
  document.querySelectorAll('[data-consult]').forEach(b=>b.addEventListener('click',()=>{$('consultOrder').textContent=state.order_code||'';$('consultDialog').showModal();}));
@@ -112,7 +110,7 @@ async function poll(){
  try{
   const x=await request('result',access());if(version!==pollVersion)return;state.has_photo=x.has_photo&&!state.photo_dirty;state.has_proof=x.has_proof&&!state.proof_dirty;
   if(x.checkout_stage==='draft'){state.submitted=false;save();if(!state.has_photo){showStep(1);message('现场照片还未上传完成，请继续上传后再付款。');return;}await preparePayment({resume:true});return;}
-  const messages={waiting_payment_verification:['等待付款确认','付款凭证已提交，核对实际到账后自动开始处理。'],queued:['已进入处理队列','照片和需求已保存，你可以关闭页面，稍后通过订单链接回来。'],generating:['正在整理你的庭院方向','正在生成画面并检查现场关系，结果完成后会在这里出现。'],failed:['这次处理需要继续跟进',x.error_message||'订单已经保留，请通过下方入口联系处理，无需再次付款。']};
+  const messages={waiting_payment_verification:['等待付款确认','付款凭证已提交，核对实际到账后安排反馈。'],pending_generation:['已确认到账','已收到款项，正在安排你的方向反馈，无需再次付款。'],queued:['已进入处理队列','照片和需求已保存，你可以关闭页面，稍后通过订单链接回来。'],generating:['正在整理你的庭院方向','正在生成画面并检查现场关系，结果完成后会在这里出现。'],failed:['这次处理需要继续跟进',x.error_message||'订单已经保留，请通过下方入口联系处理，无需再次付款。']};
   if(x.process_status==='completed'&&x.image_url&&Array.isArray(x.advice)&&x.advice.length===3){
    $('resultImg').src=x.image_url;await $('resultImg').decode();if(version!==pollVersion)return;
    $('originalImg').src=x.original_url;$('advice').innerHTML=x.advice.map((s,i)=>'<div><b>0'+(i+1)+'</b>｜'+esc(s)+'</div>').join('');

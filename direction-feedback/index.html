@@ -84,6 +84,7 @@ h2{font-size:clamp(30px,5vw,48px);line-height:1.24}
   transition:.18s
 }
 .option span:hover{border-color:#a79e96}
+.option input:focus-visible+span,.chip input:focus-visible+span{outline:2px solid var(--red);outline-offset:4px}
 .option input:checked+span{border-color:var(--ink);background:var(--ink);color:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:10px}
 .chip{position:relative}
@@ -194,7 +195,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
           <p class="sub">不用精确测量，先选一个最接近的范围。</p>
         </div>
         <div class="options" id="yardSize"><label class="option"><input type="radio" name="yardSize" value="小于30㎡"><span>小于30㎡</span></label><label class="option"><input type="radio" name="yardSize" value="30–60㎡"><span>30–60㎡</span></label><label class="option"><input type="radio" name="yardSize" value="60–100㎡"><span>60–100㎡</span></label><label class="option"><input type="radio" name="yardSize" value="100㎡以上"><span>100㎡以上</span></label><label class="option"><input type="radio" name="yardSize" value="不确定"><span>不确定</span></label></div>
-        <div class="actions"><button class="mini-back" data-back>← 上一步</button></div>
+        <div class="actions"><button class="btn red" id="sizeNext" disabled>下一步，选择需求 →</button><button class="mini-back" data-back>← 上一步</button></div>
       </div>
     </section>
 
@@ -221,7 +222,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
           <p class="sub">不用懂风格名称，选最接近你想过的生活。</p>
         </div>
         <div class="options" id="style"><label class="option"><input type="radio" name="style" value="东方自然"><span>东方自然</span></label><label class="option"><input type="radio" name="style" value="自然松弛"><span>自然松弛</span></label><label class="option"><input type="radio" name="style" value="现代极简"><span>现代极简</span></label><label class="option"><input type="radio" name="style" value="温暖生活感"><span>温暖生活感</span></label><label class="option"><input type="radio" name="style" value="我说不清，让大一帮我判断"><span>我说不清，让大一帮我判断</span></label></div>
-        <div class="actions"><button class="mini-back" data-back>← 上一步</button></div>
+        <div class="actions"><button class="btn red" id="styleNext" disabled>下一步，补充说明 →</button><button class="mini-back" data-back>← 上一步</button></div>
       </div>
     </section>
 
@@ -260,7 +261,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
             <div class="deliverable"><b>02</b><div><strong>3 条设计建议</strong><br><span class="sub">告诉你空间方向、优先级，以及暂时别急着做的地方。</span></div></div>
           </div>
           <div id="summary" class="summary"></div>
-          <p class="sub">付款由大一核对实际到账；确认后自动制作。关闭页面也不会中断，保存订单链接即可回来查看。</p><div class="notice">本产品用于庭院前期方向判断和视觉参考，不替代现场勘测、完整景观设计、施工图及专项工程设计。</div>
+          <p class="sub">付款由大一核对实际到账；确认后安排方向反馈。关闭页面也不会中断，保存订单链接即可回来查看。</p><div class="notice">本产品用于庭院前期方向判断和视觉参考，不替代现场勘测、完整景观设计、施工图及专项工程设计。</div>
         </div>
         <div class="actions">
           <button class="btn red" id="toPay">确认去付款 · ¥39.9 →</button>
@@ -285,7 +286,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
             <div class="pay-price">¥39.90</div>
             <p class="sub">请扫码完成付款。付款后填写一个联系方式并上传付款成功截图，我们会把这笔订单与你刚刚填写的院子信息绑定。</p>
             <div style="margin-top:20px">
-              <input aria-label="微信号或手机号" id="contact" type="text" placeholder="微信号或手机号，仅用于订单沟通">
+              <label for="contact" class="sub" style="display:block;margin-bottom:8px">客户联系方式</label><input aria-label="微信号或手机号" id="contact" type="text" placeholder="微信号或手机号，仅用于订单沟通">
             </div>
             <div class="file-proof">
               <input id="payProof" type="file" aria-label="付款成功截图" accept="image/jpeg,image/png,image/webp,image/heic,image/heif"><p id="proofStatus" class="sub"></p>
@@ -328,7 +329,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
   </main>
 </div>
 
-<script type="module" src="./app.mjs?v=20260920-cashier"></script>
+<script type="module" src="./app.mjs?v=20260920-client-flow"></script>
 <dialog id="consultDialog"><h2>带着你的院子，继续聊。</h2><p class="sub">添加大一造园，提供本次订单号即可继续沟通。</p><p id="consultOrder"></p><img src="./assets/contact-qr.png" alt="大一造园微信联系方式" style="width:220px;max-width:100%"><div class="actions"><button id="closeConsult" class="btn">知道了</button></div></dialog>
 </body>
 </html>

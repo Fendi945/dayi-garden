@@ -3,7 +3,7 @@ const $=id=>document.getElementById(id);
 function track(event){try{const body={event_name:event,path:location.pathname,source:new URLSearchParams(location.search).get('source')||'direct',session_id:sessionStorage.getItem('dayi_session')||crypto.randomUUID()};sessionStorage.setItem('dayi_session',body.session_id);fetch(SUPABASE_URL+'/rest/v1/analytics_events',{method:'POST',headers:{apikey:PUBLIC_KEY,Authorization:'Bearer '+PUBLIC_KEY,'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:true}).catch(()=>{});}catch{}}
 const STATE_KEY='dayi_checkout_v2';
 let state={step:0,needs:[],style:'',yardSize:'',notes:'',contact:'',request_id:crypto.randomUUID(),access_token:randomToken()};
-let timer,advanceTimer,submitting=false,photo,proof,pollVersion=0,paymentReady=false;
+let timer,submitting=false,photo,proof,pollVersion=0,paymentReady=false;
 function randomToken(){return [...crypto.getRandomValues(new Uint8Array(32))].map(x=>x.toString(16).padStart(2,'0')).join('');}
 function save(){try{localStorage.setItem(STATE_KEY,JSON.stringify(state));}catch{message('浏览器暂时不能保存进度，请保存订单链接。');}}
 function message(text){$('feedback').textContent=text;$('feedback').hidden=!text;}
@@ -33,8 +33,9 @@ export async function normalizeImage(file,minDimension=384){
 }
 function selectedNeeds(){return [...document.querySelectorAll('#needs input:checked')].map(x=>x.value);}
 function showStep(n){
- clearTimeout(advanceTimer);state.step=n;save();message('');if(n===1)track('start_click');if(n===6)track('offer_view');
+ state.step=n;save();message('');if(n===1)track('start_click');if(n===6)track('offer_view');
  document.querySelectorAll('.step').forEach(el=>el.classList.toggle('active',Number(el.dataset.step)===n));
+ $('sizeNext').disabled=!state.yardSize;$('styleNext').disabled=!state.style;
  $('progress').style.width=(n===0?0:n===8?100:Math.min(96,Math.round(n/7*96)))+'%';
  if(n===6)$('summary').innerHTML='院子面积：'+esc(state.yardSize)+'<br>主要需求：'+esc(state.needs.join('、'))+'<br>偏好方向：'+esc(state.style);
  if(n===8){$('orderCodeText').textContent=state.order_code||'';updateOrderLink();}
@@ -55,11 +56,12 @@ async function preparePayment({resume=false}={}){
  $('paymentOrder').textContent=state.order_code?'订单号：'+state.order_code:'';
  $('retryPayment').disabled=true;$('toPay').disabled=true;
  try{
-  if(!resume){
+  if(!resume||state.details_dirty){
    if(!state.yardSize||!state.style||!state.needs.length||(!photo&&!state.has_photo))throw new Error('请返回补齐院子照片和需求，完成后即可提交订单。');
    setPaymentStatus('正在保存你的院子与需求…');
    const x=await request('create',{request_id:state.request_id,access_token:state.access_token,details:{style:state.style,yard_size:state.yardSize,needs:state.needs,notes:state.notes}});
-   state.order_code=x.order_code;state.has_photo=x.has_photo&&!state.photo_dirty;save();
+   if(x.checkout_stage==='submitted'){state.order_code=x.order_code;state.submitted=true;save();showStep(8);poll();return;}
+   state.order_code=x.order_code;state.has_photo=x.has_photo&&!state.photo_dirty;state.details_dirty=false;save();
    if(!state.has_photo){await upload('yard',photo);state.has_photo=true;state.photo_dirty=false;save();}
   }
   if(!state.order_code||!state.has_photo)throw new Error('请先完成现场照片上传，再继续付款。');
@@ -76,10 +78,13 @@ function bind(){
   try{photo=await normalizeImage(f);await cachedFile('yard',photo).catch(()=>{});state.has_photo=false;state.photo_dirty=true;save();$('photoPreview').src=URL.createObjectURL(photo);$('photoPreview').style.display='block';$('photoNext').disabled=false;message('');}catch(e){message(e.message);}finally{this.disabled=false;}
  });
  $('photoNext').addEventListener('click',()=>{if(photo||state.has_photo)showStep(2);});
- document.querySelectorAll('[name=yardSize]').forEach(r=>r.addEventListener('change',()=>{state.yardSize=r.value;save();clearTimeout(advanceTimer);advanceTimer=setTimeout(()=>showStep(3),280);}));
+ document.querySelectorAll('[name=yardSize]').forEach(r=>r.addEventListener('change',()=>{state.yardSize=r.value;state.details_dirty=true;save();$('sizeNext').disabled=false;}));
+ $('sizeNext').addEventListener('click',()=>{if(!state.yardSize){message('请先选择院子的面积范围。');return;}showStep(3);});
+ document.querySelectorAll('#needs input').forEach(r=>r.addEventListener('change',()=>{state.needs=selectedNeeds();state.details_dirty=true;save();}));
  $('needsNext').addEventListener('click',()=>{state.needs=selectedNeeds();if(!state.needs.length){message('请至少选择一个最希望解决的问题。');return;}showStep(4);});
- document.querySelectorAll('[name=style]').forEach(r=>r.addEventListener('change',()=>{state.style=r.value;save();clearTimeout(advanceTimer);advanceTimer=setTimeout(()=>showStep(5),280);}));
- $('notes').addEventListener('input',()=>{state.notes=$('notes').value;save();});
+ document.querySelectorAll('[name=style]').forEach(r=>r.addEventListener('change',()=>{state.style=r.value;state.details_dirty=true;save();$('styleNext').disabled=false;}));
+ $('styleNext').addEventListener('click',()=>{if(!state.style){message('请先选择一个方向感觉。');return;}showStep(5);});
+ $('notes').addEventListener('input',()=>{state.notes=$('notes').value;state.details_dirty=true;save();});
  $('contact').addEventListener('input',()=>{state.contact=$('contact').value;save();});
  $('toPay').addEventListener('click',()=>preparePayment());
  $('retryPayment').addEventListener('click',()=>preparePayment({resume:!!state.order_code&&state.has_photo}));
@@ -109,7 +114,8 @@ async function poll(){
  clearTimeout(timer);const version=++pollVersion;if(!state.order_code)return;
  try{
   const x=await request('result',access());if(version!==pollVersion)return;state.has_photo=x.has_photo&&!state.photo_dirty;state.has_proof=x.has_proof&&!state.proof_dirty;
-  if(x.checkout_stage==='draft'){state.submitted=false;save();if(!state.has_photo){showStep(1);message('现场照片还未上传完成，请继续上传后再付款。');return;}await preparePayment({resume:true});return;}
+  if(x.checkout_stage==='draft'){state.submitted=false;save();if(!state.has_photo){showStep(1);message('现场照片还未上传完成，请继续上传后再付款。');return;}if(state.step>=1&&state.step<=6)return;await preparePayment({resume:true});return;}
+  state.submitted=true;save();if(state.step!==8)showStep(8);
   const messages={waiting_payment_verification:['等待付款确认','付款凭证已提交，核对实际到账后安排反馈。'],pending_generation:['已确认到账','已收到款项，正在安排你的方向反馈，无需再次付款。'],queued:['已进入处理队列','照片和需求已保存，你可以关闭页面，稍后通过订单链接回来。'],generating:['正在整理你的庭院方向','正在生成画面并检查现场关系，结果完成后会在这里出现。'],failed:['这次处理需要继续跟进',x.error_message||'订单已经保留，请通过下方入口联系处理，无需再次付款。']};
   if(x.process_status==='completed'&&x.image_url&&Array.isArray(x.advice)&&x.advice.length===3){
    $('resultImg').src=x.image_url;await $('resultImg').decode();if(version!==pollVersion)return;
@@ -133,6 +139,6 @@ async function init(){
  if(photo){$('photoPreview').src=URL.createObjectURL(photo);$('photoPreview').style.display='block';}
  $('photoNext').disabled=!photo&&!state.has_photo;
  if(proof||state.has_proof)$('proofStatus').textContent='已有付款截图，提交时会继续使用。';
- track('page_view');bind();showStep(state.order_code?8:state.step||0);if(state.order_code)poll();else if(state.step===7)preparePayment();
+ track('page_view');bind();showStep(state.submitted?8:state.step||0);if(state.order_code)poll();else if(state.step===7)preparePayment();
 }
 init();

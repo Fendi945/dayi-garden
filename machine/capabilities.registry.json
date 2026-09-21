@@ -1,0 +1,155 @@
+{
+  "registry_version": "1.0",
+  "updated_at": "2026-09-21",
+  "principles": {
+    "provider_agnostic": true,
+    "single_source_of_truth": true,
+    "target_is_not_current": true,
+    "delivery_requires_verification": true
+  },
+  "capabilities": [
+    {
+      "capability_id": "garden.feedback.order.read",
+      "name": "Read garden feedback order",
+      "domain": "garden",
+      "maturity": "CURRENT",
+      "risk_level": "P2",
+      "human_gate": false,
+      "implementation_id": "dayi-garden.direction-feedback.admin",
+      "baseline_ref": "git:9ccd92b53df2763d681e540754b1448acafc6322",
+      "notes": "Reads order materials, requirements, status and existing delivery metadata."
+    },
+    {
+      "capability_id": "garden.feedback.materials.read",
+      "name": "Read customer yard photo and payment proof",
+      "domain": "garden",
+      "maturity": "CURRENT",
+      "risk_level": "P1",
+      "human_gate": false,
+      "implementation_id": "dayi-garden.direction-feedback.admin_order_images",
+      "baseline_ref": "git:9ccd92b53df2763d681e540754b1448acafc6322",
+      "notes": "Sensitive customer material; access must be authenticated and logged."
+    },
+    {
+      "capability_id": "garden.feedback.prompt.read",
+      "name": "Read garden prompt draft",
+      "domain": "garden",
+      "maturity": "CURRENT",
+      "risk_level": "P2",
+      "human_gate": false,
+      "implementation_id": "dayi-garden.direction-feedback.admin_order_prompt",
+      "baseline_ref": "git:9ccd92b53df2763d681e540754b1448acafc6322",
+      "notes": "Prompt draft is context, not proof that automatic image production is live."
+    },
+    {
+      "capability_id": "garden.feedback.payment.confirm",
+      "name": "Confirm actual payment received",
+      "domain": "garden",
+      "maturity": "CURRENT",
+      "risk_level": "P0",
+      "human_gate": true,
+      "implementation_id": "dayi-garden.direction-feedback.admin_confirm",
+      "baseline_ref": "git:9ccd92b53df2763d681e540754b1448acafc6322",
+      "notes": "Current flow requires human verification of actual receipt; no payment-platform webhook is authoritative yet."
+    },
+    {
+      "capability_id": "garden.feedback.delivery.publish",
+      "name": "Publish direction image and three recommendations",
+      "domain": "garden",
+      "maturity": "CURRENT",
+      "risk_level": "P1",
+      "human_gate": true,
+      "implementation_id": "dayi-garden.direction-feedback.admin_deliver",
+      "baseline_ref": "git:9ccd92b53df2763d681e540754b1448acafc6322",
+      "notes": "Existing manual delivery capability. Does not imply automatic generation."
+    },
+    {
+      "capability_id": "garden.feedback.result_link.create",
+      "name": "Create private customer result link",
+      "domain": "garden",
+      "maturity": "CURRENT",
+      "risk_level": "P1",
+      "human_gate": false,
+      "implementation_id": "dayi-garden.direction-feedback.admin_result_link",
+      "baseline_ref": "git:9ccd92b53df2763d681e540754b1448acafc6322",
+      "notes": "Possession of link grants result access; handle as customer-sensitive."
+    },
+    {
+      "capability_id": "garden.feedback.delivery.verify",
+      "name": "Verify customer result page delivery",
+      "domain": "garden",
+      "maturity": "CURRENT",
+      "risk_level": "P2",
+      "human_gate": false,
+      "implementation_id": "dayi-garden.direction-feedback.result-closure",
+      "baseline_ref": "git:9ccd92b53df2763d681e540754b1448acafc6322",
+      "notes": "Verification requires image + 3 recommendations + valid order link + loadable result page."
+    },
+    {
+      "capability_id": "image.generate",
+      "name": "Generate or edit image",
+      "domain": "system",
+      "maturity": "PILOT",
+      "risk_level": "P1",
+      "human_gate": true,
+      "implementation_id": null,
+      "baseline_ref": null,
+      "notes": "Provider must be resolved dynamically. Not yet a production CURRENT capability for unattended customer delivery."
+    },
+    {
+      "capability_id": "garden.qa",
+      "name": "Independent garden quality review",
+      "domain": "garden",
+      "maturity": "TARGET",
+      "risk_level": "P1",
+      "human_gate": true,
+      "implementation_id": null,
+      "baseline_ref": null,
+      "notes": "Must be independent from generation worker before being promoted to CURRENT."
+    },
+    {
+      "capability_id": "garden.generate_direction_feedback",
+      "name": "End-to-end automatic garden direction feedback",
+      "domain": "garden",
+      "maturity": "TARGET",
+      "risk_level": "P1",
+      "human_gate": true,
+      "implementation_id": null,
+      "baseline_ref": null,
+      "notes": "Composite capability: planner + image.generate + garden.qa + delivery.publish + delivery.verify."
+    },
+    {
+      "capability_id": "cad.operate",
+      "name": "CAD automation worker",
+      "domain": "cad",
+      "maturity": "TARGET",
+      "risk_level": "P1",
+      "human_gate": true,
+      "implementation_id": null,
+      "baseline_ref": null,
+      "notes": "Reserved for future local or desktop execution node."
+    },
+    {
+      "capability_id": "video.generate",
+      "name": "Video generation and editing worker",
+      "domain": "video",
+      "maturity": "TARGET",
+      "risk_level": "P1",
+      "human_gate": true,
+      "implementation_id": null,
+      "baseline_ref": null,
+      "notes": "Provider-agnostic future capability."
+    },
+    {
+      "capability_id": "local.runtime",
+      "name": "Mac mini local execution node",
+      "domain": "system",
+      "maturity": "TARGET",
+      "risk_level": "P1",
+      "human_gate": false,
+      "implementation_id": null,
+      "baseline_ref": null,
+      "notes": "Local runtime is an execution node, not the Agent OS itself."
+    }
+  ]
+}

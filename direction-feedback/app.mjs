@@ -120,7 +120,13 @@ async function poll(){
   if(x.process_status==='completed'&&x.image_url&&Array.isArray(x.advice)&&x.advice.length===3){
    $('resultImg').src=x.image_url;await $('resultImg').decode();if(version!==pollVersion)return;
    $('originalImg').src=x.original_url;$('advice').innerHTML=x.advice.map((s,i)=>'<div><b>0'+(i+1)+'</b>｜'+esc(s)+'</div>').join('');
-   $('resultBox').classList.remove('hidden');$('statusTitle').textContent='你的方向反馈已完成';$('statusText').textContent='结合原院对照画面，再看下面的3条设计建议。';state.completed=true;save();return;
+   $('resultBox').classList.remove('hidden');$('statusTitle').textContent='你的方向反馈已完成';$('statusText').textContent='结合原院对照画面，再看下面的3条设计建议。';state.completed=true;save();
+   if(x.delivery_id&&!document.hidden){
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    if(version!==pollVersion||document.hidden)return;
+    try{await request('result_seen',{...access(),delivery_id:x.delivery_id});}catch{if(version===pollVersion)timer=setTimeout(poll,12000);}
+   }
+   return;
   }
   const msg=messages[x.process_status]||['订单正在处理','照片与需求已保存，请稍后回来查看。'];$('statusTitle').textContent=msg[0];$('statusText').textContent=msg[1];
   if(x.process_status==='failed')return;

@@ -1,11 +1,12 @@
 # DAYI Garden｜文档索引
 
-最后更新：2026-09-19
+最后更新：2026-09-21
 
 这里用于保存 DAYI Garden / DAYI Workbench 的长期产品、技术、工作流和决策资料。
 
 ## 核心路线
 
+- [DAYI Agent 运行架构 V1.0](./DAYI_Agent运行架构_V1.0_2026-09-21.md)
 - [DAYI 产品与应用路线图 V0.1](./DAYI_产品与应用路线图_V0.1_2026-09-19.md)
 - [DAYI Factory V1 讨论归档](./DAYI_Factory_V1_讨论归档_2026-09-18.md)
 - [DAYI Workflow 测试矩阵与评估表 V0.1](./DAYI_Workflow测试矩阵与评估表_V0.1_2026-09-19.md)
@@ -20,11 +21,27 @@
 
 ## 当前 P0
 
-让陌生客户跑通：
+### 已完成 CURRENT
 
-进入 → 上传 → 描述 → 付款 → 自动生成 → 看到结果
+方案即时反馈已跑通：
 
-在此闭环稳定前，不让长期规划拖慢当前上线。
+进入 → 上传 → 描述 → 付款 → 人工核对到账 → 人工交付方向图与3条建议 → 客户结果页可见
+
+2026-09-21 Work 最终验收代码基线：
+
+`9ccd92b53df2763d681e540754b1448acafc6322`
+
+分支：
+
+`codex/direction-feedback-automation-v2`
+
+### 下一步 TARGET
+
+不再重做方案即时反馈网页，转向 Agent 上层自动化：
+
+订单 → Planner → Image Worker → 独立 QA → Human Gate → 现有交付系统 → Delivery Verifier
+
+自动生图、自动 QA、自动重试、自动最终交付在完成真实生产验证前，不标记为 CURRENT。
 
 ## 长期资产
 

@@ -7,6 +7,7 @@
 ## 核心路线
 
 - [DAYI Agent 运行架构 V1.0](./DAYI_Agent运行架构_V1.0_2026-09-21.md)
+- [DAYI A0 Orchestrator 运行协议 V0.1](./DAYI_A0_Orchestrator_V0.1_2026-09-21.md)
 - [DAYI 产品与应用路线图 V0.1](./DAYI_产品与应用路线图_V0.1_2026-09-19.md)
 - [DAYI Factory V1 讨论归档](./DAYI_Factory_V1_讨论归档_2026-09-18.md)
 - [DAYI Workflow 测试矩阵与评估表 V0.1](./DAYI_Workflow测试矩阵与评估表_V0.1_2026-09-19.md)
@@ -54,3 +55,13 @@
 - 产品决策记录
 
 > 注意：核心 Prompt、客户数据、生产密钥、支付密钥、完整私有 Workflow 不进入公共仓库。
+
+
+## 机器协议
+
+- `machine/task.schema.json`：统一 Task 对象
+- `machine/capabilities.registry.json`：Capability Registry 与成熟度
+- `machine/orchestrator.policy.json`：A0 权限、Human Gate、Retry、交付验证规则
+- `machine/task.state-machine.json`：统一任务生命周期状态机
+
+机器层约定：能力成熟度 `CURRENT / PILOT / TARGET / ARCHIVED` 与任务运行状态完全分离；`TARGET` 不得自动视为 `CURRENT`。

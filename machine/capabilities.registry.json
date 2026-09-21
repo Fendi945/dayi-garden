@@ -150,6 +150,28 @@
       "implementation_id": null,
       "baseline_ref": null,
       "notes": "Local runtime is an execution node, not the Agent OS itself."
+    },
+    {
+      "capability_id": "context.build",
+      "name": "Build minimal sufficient task context",
+      "domain": "system",
+      "maturity": "PILOT",
+      "risk_level": "P2",
+      "human_gate": false,
+      "implementation_id": null,
+      "baseline_ref": "docs/DAYI_A1_Context_Builder_V0.1_2026-09-21.md",
+      "notes": "Produces structured context from authoritative current sources and records unknowns/conflicts."
+    },
+    {
+      "capability_id": "garden.plan",
+      "name": "Create structured DAYI garden plan",
+      "domain": "garden",
+      "maturity": "PILOT",
+      "risk_level": "P1",
+      "human_gate": true,
+      "implementation_id": null,
+      "baseline_ref": "machine/garden.plan.schema.json",
+      "notes": "Transforms GardenContext into a structured GardenPlan. Does not directly generate customer imagery."
     }
   ]
 }

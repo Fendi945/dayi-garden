@@ -1,0 +1,101 @@
+{
+  "contract_version": "0.1",
+  "updated_at": "2026-09-21",
+  "domain": "garden",
+  "product_levels": {
+    "L1_DIRECTION": {
+      "description": "Direction feedback only",
+      "current_product": true,
+      "deliverables": [
+        "one_direction_image",
+        "three_recommendations"
+      ],
+      "not_included": [
+        "construction_drawings",
+        "precise_grading",
+        "full_drainage_design",
+        "structural_design",
+        "detailed_boq"
+      ]
+    },
+    "L2_DESIGN": {
+      "description": "Formal design",
+      "current_product": false
+    },
+    "L3_CONSTRUCTION": {
+      "description": "Construction-level professional documentation",
+      "current_product": false
+    }
+  },
+  "design_principles": [
+    "preserve_real_scale",
+    "function_and_safety_before_atmosphere",
+    "negative_space_before_accumulation",
+    "avoid_unnecessary_hardscape",
+    "sparse_planting",
+    "low_maintenance",
+    "respect_existing_site",
+    "check_drainage_level_and_safety",
+    "avoid_influencer_style_piling",
+    "avoid_cheap_monochrome",
+    "maintain_constructability"
+  ],
+  "planner_output_fields": [
+    "preserve",
+    "remove_or_reduce",
+    "problems_to_solve",
+    "spatial_strategy",
+    "planting_strategy",
+    "material_strategy",
+    "drainage_safety_notes",
+    "visual_direction",
+    "must_avoid",
+    "unknowns_blocking_precision",
+    "delivery_notes"
+  ],
+  "image_constraints": [
+    "preserve_major_building_relationships",
+    "preserve_doors_and_windows",
+    "preserve_wall_relationships",
+    "preserve_entry_location",
+    "preserve_major_scale",
+    "preserve_known_level_relationships",
+    "do_not_expand_site_fictitiously",
+    "do_not_change_building_mass",
+    "do_not_add_impossible_background_space",
+    "do_not_hide_site_errors_with_dense_planting",
+    "do_not_hide_scale_errors_with_lighting"
+  ],
+  "qa_redlines": [
+    "SCALE_DRIFT",
+    "LAYOUT_HALLUCINATION",
+    "DRAINAGE_RISK",
+    "SAFETY_RISK",
+    "CUSTOMER_NEED_MISSED",
+    "BUILDING_RELATION_CHANGED",
+    "OVER_HARDSCAPED",
+    "PLANTING_TOO_DENSE",
+    "RESULT_IMAGE_UNAVAILABLE"
+  ],
+  "qa_dimensions": [
+    "site_scale",
+    "building_relationship",
+    "circulation",
+    "safety",
+    "drainage_risk",
+    "customer_core_need",
+    "planting_density",
+    "hardscape_ratio",
+    "dayi_style_consistency",
+    "constructability",
+    "ai_hallucination",
+    "customer_worthiness"
+  ],
+  "qa_outcomes": [
+    "pass",
+    "retry",
+    "needs_human",
+    "fail"
+  ],
+  "unknowns_policy": "reduce_precision_do_not_invent"
+}

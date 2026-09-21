@@ -13,7 +13,7 @@ async function request(action,data={},form=null,timeout=45000){
  if(form){form.set('action',action);for(const[k,v]of Object.entries(data))form.set(k,String(v));options.body=form;}
  else{options.headers['Content-Type']='application/json';options.body=JSON.stringify({action,...data});}
  let r;try{r=await fetch(API_URL,options);}catch{throw new Error('连接暂时中断，请重试。已保存的订单和照片会保留。');}
- let x;try{x=await r.json();}catch{throw new Error('暂时无法确认付款状态，请重新检查。没有发起扣款。');}if(!r.ok)throw new Error(x.message||'本次操作未完成，请稍后重试。');return x;
+ let x;try{x=await r.json();}catch{throw new Error('暂时无法确认付款状态，请重新检查。没有发起扣款。');}if(!r.ok){const e=new Error(x.message||'本次操作未完成，请稍后重试。');e.code=x.error;throw e;}return x;
 }
 const access=()=>({order_code:state.order_code,access_token:state.access_token});
 function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open('dayi-checkout',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
@@ -107,20 +107,44 @@ function bind(){
  $('closeConsult').addEventListener('click',()=>$('consultDialog').close());
  $('newOrder').addEventListener('click',()=>{localStorage.removeItem(STATE_KEY);location.hash='';location.reload();});
  $('retryStatus').addEventListener('click',()=>poll());
+ window.addEventListener('hashchange',()=>{if(restoreResultLink()){showStep(8);poll();}});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.step===8&&state.order_code)poll();});
 }
 async function upload(kind,file){const f=new FormData();f.set('file',file,file.name);return request('upload',{...access(),kind},f);}
+function clearResult(){
+ $('resultBox').classList.add('hidden');$('resultImg').removeAttribute('src');$('originalImg').removeAttribute('src');$('advice').replaceChildren();$('openResultImage').removeAttribute('href');$('openResultImage').hidden=true;state.completed=false;
+}
+function restoreResultLink(){
+ const hash=new URLSearchParams(location.hash.slice(1));if(!hash.has('order')&&!hash.has('key'))return false;
+ clearTimeout(timer);++pollVersion;clearResult();
+ const code=hash.get('order')||'',key=hash.get('key')||'';
+ if(!/^(?:DAYI|DAY1|DY)-[A-Z0-9-]{6,50}$/.test(code)||!/^[a-f0-9]{64}$/.test(key)){
+  state={step:8,needs:[],order_code:'',access_token:'',submitted:true};showStep(8);$('resumeLink').removeAttribute('href');$('copyOrder').disabled=true;$('statusTitle').textContent='订单链接不完整';$('statusText').textContent='请使用大一发来的完整结果链接，包含订单号和查看凭证。';return false;
+ }
+ if(state.order_code!==code||state.access_token!==key)state={step:8,needs:[],request_id:crypto.randomUUID()};
+ state.order_code=code;state.access_token=key;state.step=8;state.submitted=true;$('copyOrder').disabled=false;save();return true;
+}
+async function loadResultImage(url){
+ let timeout;try{
+  $('resultImg').src=url;
+  await Promise.race([$('resultImg').decode(),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('image_timeout')),20000);})]);
+ }finally{clearTimeout(timeout);}
+}
 async function poll(){
  clearTimeout(timer);const version=++pollVersion;if(!state.order_code)return;
+ if(!$('resultBox').classList.contains('hidden'))$('statusText').textContent='正在检查最新反馈…';else{$('statusTitle').textContent='正在读取本次订单';$('statusText').textContent='正在核对订单号与反馈进度…';}
  try{
-  const x=await request('result',access());if(version!==pollVersion)return;state.has_photo=x.has_photo&&!state.photo_dirty;state.has_proof=x.has_proof&&!state.proof_dirty;
+  const x=await request('result',access());if(version!==pollVersion)return;if(x.order_code&&x.order_code!==state.order_code)throw Error('订单信息不一致，请重新打开这笔订单的结果链接。');state.has_photo=x.has_photo&&!state.photo_dirty;state.has_proof=x.has_proof&&!state.proof_dirty;
   if(x.checkout_stage==='draft'){state.submitted=false;save();if(!state.has_photo){showStep(1);message('现场照片还未上传完成，请继续上传后再付款。');return;}if(state.step>=1&&state.step<=6)return;await preparePayment({resume:true});return;}
   state.submitted=true;save();if(state.step!==8)showStep(8);
   const messages={waiting_payment_verification:['等待付款确认','付款凭证已提交，核对实际到账后安排反馈。'],pending_generation:['已确认到账','已收到款项，正在安排你的方向反馈，无需再次付款。'],queued:['已进入处理队列','照片和需求已保存，你可以关闭页面，稍后通过订单链接回来。'],generating:['正在整理你的庭院方向','正在生成画面并检查现场关系，结果完成后会在这里出现。'],failed:['这次处理需要继续跟进',x.error_message||'订单已经保留，请通过下方入口联系处理，无需再次付款。']};
   if(x.process_status==='completed'&&x.image_url&&Array.isArray(x.advice)&&x.advice.length===3){
-   $('resultImg').src=x.image_url;await $('resultImg').decode();if(version!==pollVersion)return;
+   $('statusTitle').textContent='反馈已完成，正在加载效果图';$('statusText').textContent='图片加载后，下方会显示本次方向图与3条建议。';
+   $('openResultImage').href=x.image_url;$('openResultImage').hidden=false;
+   try{await loadResultImage(x.image_url);}catch{if(version!==pollVersion)return;$('resultBox').classList.add('hidden');$('statusTitle').textContent='效果图暂未加载成功';$('statusText').textContent='反馈已保存。请点击“重新加载反馈”，也可点“直接打开效果图”查看。';timer=setTimeout(poll,12000);return;}
+   if(version!==pollVersion)return;
    $('originalImg').src=x.original_url;$('advice').innerHTML=x.advice.map((s,i)=>'<div><b>0'+(i+1)+'</b>｜'+esc(s)+'</div>').join('');
-   $('resultBox').classList.remove('hidden');$('statusTitle').textContent='你的方向反馈已完成';$('statusText').textContent='结合原院对照画面，再看下面的3条设计建议。';state.completed=true;save();
+   $('resultBox').classList.remove('hidden');$('resultHeading').textContent='你的庭院方向反馈';$('resultLead').textContent='先看本次效果图，再结合3条建议判断下一步。';$('statusTitle').textContent='你的方向反馈已完成';$('statusText').textContent='结合原院对照画面，再看下面的3条设计建议。';state.completed=true;save();
    if(x.delivery_id&&!document.hidden){
     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     if(version!==pollVersion||document.hidden)return;
@@ -128,16 +152,15 @@ async function poll(){
    }
    return;
   }
-  const msg=messages[x.process_status]||['订单正在处理','照片与需求已保存，请稍后回来查看。'];$('statusTitle').textContent=msg[0];$('statusText').textContent=msg[1];
+  clearResult();const msg=messages[x.process_status]||['订单正在处理','照片与需求已保存，请稍后回来查看。'];$('statusTitle').textContent=msg[0];$('statusText').textContent=msg[1];
   if(x.process_status==='failed')return;
- }catch(e){$('statusText').textContent=e.message;}
+ }catch(e){if(version!==pollVersion)return;if(e.code==='order_access_denied'){clearResult();$('statusTitle').textContent='这个订单链接暂时无法读取';$('statusText').textContent='链接可能不完整或已过期，请使用大一发来的最新完整结果链接。';return;}$('statusTitle').textContent='暂时无法读取反馈';$('statusText').textContent=e.message;}
  if(version===pollVersion)timer=setTimeout(poll,12000);
 }
 async function init(){
  try{const saved=JSON.parse(localStorage.getItem(STATE_KEY)||'null');if(saved&&saved.access_token)state={...state,...saved};}catch{}
- const hash=new URLSearchParams(location.hash.slice(1));
- if(hash.get('order')&&/^[a-f0-9]{64}$/.test(hash.get('key')||'')){if(state.order_code!==hash.get('order'))state={step:8,needs:[],request_id:crypto.randomUUID()};state.order_code=hash.get('order');state.access_token=hash.get('key');state.step=8;state.submitted=true;}
- try{[photo,proof]=await Promise.all([cachedFile('yard'),cachedFile('proof')]);}catch{}
+ const linked=restoreResultLink();
+ if(!linked&&!state.submitted){try{[photo,proof]=await Promise.race([Promise.all([cachedFile('yard'),cachedFile('proof')]),new Promise(resolve=>setTimeout(()=>resolve([]),2000))]);}catch{}}
  $('notes').value=state.notes||'';$('contact').value=state.contact||'';
  document.querySelectorAll('[name=yardSize]').forEach(x=>x.checked=x.value===state.yardSize);
  document.querySelectorAll('[name=style]').forEach(x=>x.checked=x.value===state.style);

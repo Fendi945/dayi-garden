@@ -11,14 +11,16 @@ try{
   const pending={...paid,order_code:'DAYI-QA-PENDING123',payment_status:'pending_verification',process_status:'waiting_payment_verification'};
   const image='http://127.0.0.1:8771/qa-image.jpg';
   await page.addInitScript(()=>sessionStorage.setItem('dayi_admin_v2',JSON.stringify({access_token:'test-only',expires_at:9999999999})));
-  await page.route('**/qa-image.jpg',r=>r.fulfill({contentType:'image/jpeg',body:fixture}));
-  await page.route('https://fhvhnibznphatfnbvvnb.supabase.co/**',async route=>{
+  await context.route('**/qa-image.jpg',r=>r.fulfill({contentType:'image/jpeg',body:fixture}));
+  await context.route('https://fhvhnibznphatfnbvvnb.supabase.co/**',async route=>{
    const request=route.request();const send=(body,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(body)});
-   if(request.method()==='OPTIONS')return send({});
+   if(request.method()==='OPTIONS'||request.url().endsWith('/analytics_events'))return send({});
    if(request.headers()['content-type']?.includes('multipart/form-data')){
     const raw=request.postData();assert.match(raw,/admin_deliver/);assert.match(raw,/DAYI-QA-PAID123456/);assert.match(raw,/expected_updated_at/);assert.match(raw,/保留原建筑与围墙/);assert.match(raw,/优先整理喝茶区域/);assert.match(raw,/施工前核对现场排水/);delivered=true;deliveryCount++;return send({delivered:true});
    }
    const b=request.postDataJSON();
+   if(b.action==='result')return send({order_code:paid.order_code,checkout_stage:'submitted',process_status:delivered?'completed':'pending_generation',has_photo:true,has_proof:true,...(delivered?{image_url:image,original_url:image,delivery_id:11,advice:['保留原建筑与围墙','优先整理喝茶区域','施工前核对现场排水']}: {})});
+   if(b.action==='result_seen'){assert.equal(b.delivery_id,11);assert.equal(delivered,true);return send({recorded:true});}
    if(b.action==='admin_business_status')return send({automatic:false});
    if(b.action==='admin_metrics')return send({submitted:2,pending:1,paid:1,completed:delivered?1:0,revenue:39.9});
    if(b.action==='admin_business_orders'){
@@ -36,12 +38,13 @@ try{
   await order.getByText('客户原图与付款凭证',{exact:true}).click();await order.locator('[data-images] img').first().evaluate(i=>i.decode());assert.equal(await order.getByRole('link',{name:'打开原尺寸图片'}).count(),2);
   await order.getByText('查看 / 复制生图提示词',{exact:true}).click();await order.getByText(/根据需求整理的草稿/).waitFor();assert.match(await order.locator('[data-prompt-text]').textContent(),/保留原树/);assert.equal(await page.evaluate(()=>window.BAD),undefined);
   assert.equal(await page.locator('.order').filter({hasText:pending.order_code}).getByRole('button',{name:'上传效果图并交付',exact:true}).isDisabled(),true);
+  const customer=await context.newPage();await customer.goto('http://127.0.0.1:8771/#order='+paid.order_code+'&key='+'a'.repeat(64));await customer.getByText('已确认到账',{exact:true}).waitFor();await page.bringToFront();
   await order.getByRole('button',{name:'上传效果图并交付',exact:true}).click();await page.locator('#deliveryDialog').waitFor({state:'visible'});await page.locator('#deliveryOriginal').evaluate(i=>i.decode());await page.locator('#deliveryImage').setInputFiles('tests/fixtures/yard-placeholder.jpg');await page.waitForFunction(()=>{const i=document.getElementById('deliveryPreview');return !i.hidden&&i.complete&&i.naturalWidth>0;});
   for(const [i,value]of ['保留原建筑与围墙','优先整理喝茶区域','施工前核对现场排水'].entries())await page.locator('#advice'+(i+1)).fill(value);
-  await page.locator('#publishDelivery').click();await page.getByText('反馈已保存。请查看本版查看状态，或复制客户结果链接发送给客户。',{exact:true}).waitFor();assert.equal(deliveryCount,1);order=page.locator('.order').filter({hasText:paid.order_code});await order.locator('img[alt="本次反馈方向图"]').evaluate(i=>i.decode());
+  await page.locator('#publishDelivery').click();await page.getByText('反馈已保存，请点击“查看这笔订单的客户结果”核对效果图。',{exact:true}).waitFor();assert.equal(deliveryCount,1);assert.match(await page.locator('#deliverySuccessLink').getAttribute('href'),/#order=DAYI-QA-PAID123456&key=a{64}$/);await customer.bringToFront();await customer.getByText('你的方向反馈已完成',{exact:true}).waitFor({timeout:18000});assert.equal(await customer.locator('#advice > div').count(),3);assert.equal(await customer.locator('#resultImg').evaluate(i=>i.complete&&i.naturalWidth>0),true);await page.bringToFront();order=page.locator('.order').filter({hasText:paid.order_code});await order.locator('img[alt="本次反馈方向图"]').evaluate(i=>i.decode());
   await order.getByText('尚无查看记录（本版反馈）',{exact:true}).waitFor();await order.getByRole('button',{name:'复制客户结果链接',exact:true}).click();await order.getByLabel('客户结果链接',{exact:true}).waitFor();assert.match(await order.getByLabel('客户结果链接',{exact:true}).inputValue(),/#order=DAYI-QA-PAID123456&key=a{64}$/);
   await order.getByText('查看反馈交付记录',{exact:true}).click();await order.getByText('第 1 版',{exact:false}).waitFor();
-  await page.locator('[data-filter="drafts"]').click();await page.getByText('未提交完成',{exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'上传效果图并交付',exact:true}).isDisabled(),true);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual(errors,[]);
+  await customer.close();await page.locator('[data-filter="drafts"]').click();await page.getByText('未提交完成',{exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'上传效果图并交付',exact:true}).isDisabled(),true);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual(errors,[]);
   console.log('PASS '+width+'px: all orders, original/proof, safe draft prompt, payment guard, image upload + 3 advice, delivery history, draft filter');await context.close();
  }
 }finally{await browser?.close();server.kill();}

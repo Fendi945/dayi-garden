@@ -21,6 +21,8 @@ function showLogin(){$('login').classList.remove('hidden');$('workspace').classL
 async function status(){const x=await api('admin_business_status');$('serviceStatus').textContent=x.automatic?'核对实际到账后，订单会自动处理；需要跟进的订单会留在这里。':'核对到账后安排反馈；方向图与3条建议核对完整后交付。';}
 async function metrics(){const m=await api('admin_metrics',{days});for(const k of ['pending','submitted','completed'])$(k).textContent=m[k]??0;$('revenue').textContent='¥'+Number(m.revenue||0).toFixed(2);$('paidCount').textContent=(m.paid||0)+'笔已确认到账';$('funnel').textContent='本期访问 '+(m.visitors||0)+' · 提交 '+(m.submitted||0)+' · 到账 '+(m.paid||0)+' · 完整交付 '+(m.completed||0);}
 const statusNames={waiting_payment_verification:'待核对到账',pending_generation:'待安排反馈',queued:'等待处理',generating:'处理中',completed:'已交付',failed:'需要跟进'};
+const resultLinks=new Map();
+async function resultLink(code){if(resultLinks.has(code))return resultLinks.get(code);const x=await api('admin_result_link',{order_code:code});const url=new URL('../',location.href);url.hash=new URLSearchParams({order:x.order_code,key:x.access_token}).toString();resultLinks.set(code,url.href);return url.href;}
 const time=v=>v?new Date(v).toLocaleString('zh-CN',{hour12:false}):'—';
 async function orders(append=false){
  if(loading)return;loading=true;
@@ -38,8 +40,9 @@ async function orders(append=false){
  function action(label,fn,disabled=false){const b=document.createElement('button');b.className='action-primary';b.textContent=label;b.disabled=disabled;b.addEventListener('click',async()=>{b.disabled=true;try{await fn();}catch(e){message(e.message);}finally{b.disabled=false;}});actions.append(b);}
  if(o.checkout_stage!=='draft'&&o.payment_status==='pending_verification'&&o.has_photo&&o.has_proof&&o.contact)action('已核对实际到账，确认收款',async()=>{await api('admin_confirm',{order_code:o.order_code});message('到账已确认并保存。');await Promise.all([metrics(),orders()]);});
  if(!o.production_active)action(complete?'上传新版效果图':'上传效果图并交付',()=>openDelivery(o),!paid||o.checkout_stage==='draft');
+ if(complete)action('查看客户结果',async()=>{location.assign(await resultLink(o.order_code));});
  if(complete)action('复制客户结果链接',async()=>{
-  const x=await api('admin_result_link',{order_code:o.order_code});const url=new URL('../',location.href);url.hash=new URLSearchParams({order:x.order_code,key:x.access_token}).toString();
+  const url=new URL(await resultLink(o.order_code));
   let box=el.querySelector('[data-result-link]');if(!box){box=document.createElement('div');box.dataset.resultLink='';const label=document.createElement('label');label.textContent='客户结果链接（有效期30天）';const input=document.createElement('input');input.readOnly=true;input.setAttribute('aria-label','客户结果链接');input.style.cssText='display:block;width:100%;min-width:0;margin:8px 0';label.append(input);box.append(label);const note=document.createElement('p');note.className='sub';note.textContent='请单独发给对应客户；持有链接即可查看。打开链接测试也会计入查看记录。';box.append(note);el.append(box);}const input=box.querySelector('input');input.value=url.href;
   try{await navigator.clipboard.writeText(url.href);message('客户结果链接已复制，请通过客户留下的联系方式发送。');}catch{input.focus();input.select();message('结果链接已生成并选中，请长按复制或按 Ctrl+C。');}
  });
@@ -56,7 +59,9 @@ $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginBu
 $('logout').addEventListener('click',()=>{saveSession(null);showLogin();});
 $('closeDelivery').addEventListener('click',()=>$('deliveryDialog').close());
 $('deliveryImage').addEventListener('change',()=>{const f=$('deliveryImage').files[0];if(!f)return;if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=URL.createObjectURL(f);$('deliveryPreview').src=previewUrl;$('deliveryPreview').hidden=false;});
-$('deliveryForm').addEventListener('submit',async e=>{e.preventDefault();if(!deliveryOrder)return;$('publishDelivery').disabled=true;$('deliveryMessage').textContent='正在保存反馈…';try{const f=$('deliveryImage').files[0];if(!f||f.size>6*1024*1024)throw Error('请选择6MB以内的反馈图片。');const form=new FormData();form.set('file',f);const advice=[1,2,3].map(n=>$('advice'+n).value.trim());await api('admin_deliver',{order_code:deliveryOrder.order_code,expected_updated_at:deliveryOrder.updated_at,advice:JSON.stringify(advice)},form);$('deliveryDialog').close();message('反馈已保存。请查看本版查看状态，或复制客户结果链接发送给客户。');await Promise.all([metrics(),orders()]);}catch(err){$('deliveryMessage').textContent=err.message+' 若订单已有变化，请关闭并刷新后重新核对。';}finally{$('publishDelivery').disabled=false;}});
+$('deliveryForm').addEventListener('submit',async e=>{e.preventDefault();if(!deliveryOrder)return;$('publishDelivery').disabled=true;$('deliveryMessage').textContent='正在保存反馈…';try{const f=$('deliveryImage').files[0];if(!f||f.size>6*1024*1024)throw Error('请选择6MB以内的反馈图片。');const form=new FormData();form.set('file',f);const advice=[1,2,3].map(n=>$('advice'+n).value.trim());await api('admin_deliver',{order_code:deliveryOrder.order_code,expected_updated_at:deliveryOrder.updated_at,advice:JSON.stringify(advice)},form);$('deliveryDialog').close();message('反馈已保存。正在准备这笔订单的客户结果入口…');
+ try{const url=await resultLink(deliveryOrder.order_code);$('deliverySuccessOrder').textContent='订单号：'+deliveryOrder.order_code;$('deliverySuccessLink').href=url;$('deliverySuccess').classList.remove('hidden');message('反馈已保存，请点击“查看这笔订单的客户结果”核对效果图。');}catch{message('反馈已保存，结果入口暂时未能生成。请在这笔订单点击“查看客户结果”重试，无需重复上传。');}
+ await Promise.all([metrics(),orders()]).catch(()=>message('反馈已保存，订单列表暂未刷新。请点击刷新核对。'));}catch(err){$('deliveryMessage').textContent=err.message+' 若订单已有变化，请关闭并刷新后重新核对。';}finally{$('publishDelivery').disabled=false;}});
 $('refresh').addEventListener('click',()=>Promise.all([status(),metrics(),orders()]).catch(e=>message(e.message)));
 $('more').addEventListener('click',()=>orders(true).catch(e=>message(e.message)));
 document.querySelectorAll('[data-days]').forEach(b=>b.addEventListener('click',()=>{days=Number(b.dataset.days);document.querySelectorAll('[data-days]').forEach(a=>a.classList.toggle('active',a===b));metrics().catch(e=>message(e.message));}));

@@ -1,0 +1,95 @@
+{
+  "state_machine_version": "1.0",
+  "name": "DAYI Canonical Task Lifecycle",
+  "initial": "received",
+  "terminal": [
+    "completed",
+    "failed",
+    "cancelled"
+  ],
+  "states": {
+    "received": [
+      "payment_pending",
+      "paid",
+      "planning",
+      "failed",
+      "cancelled"
+    ],
+    "payment_pending": [
+      "paid",
+      "failed",
+      "cancelled"
+    ],
+    "paid": [
+      "planning",
+      "failed",
+      "cancelled"
+    ],
+    "planning": [
+      "generating",
+      "needs_human",
+      "failed",
+      "cancelled"
+    ],
+    "generating": [
+      "qa_check",
+      "retrying",
+      "needs_human",
+      "failed"
+    ],
+    "qa_check": [
+      "approved",
+      "retrying",
+      "needs_human",
+      "failed"
+    ],
+    "retrying": [
+      "generating",
+      "qa_check",
+      "needs_human",
+      "failed"
+    ],
+    "needs_human": [
+      "approved",
+      "retrying",
+      "failed",
+      "cancelled"
+    ],
+    "approved": [
+      "delivering",
+      "failed",
+      "cancelled"
+    ],
+    "delivering": [
+      "delivered",
+      "failed"
+    ],
+    "delivered": [
+      "verified",
+      "failed"
+    ],
+    "verified": [
+      "completed",
+      "failed"
+    ],
+    "completed": [],
+    "failed": [],
+    "cancelled": []
+  },
+  "guards": {
+    "delivered_to_verified": [
+      "artifact_exists",
+      "result_image_accessible",
+      "three_recommendations_present",
+      "result_link_valid",
+      "result_page_order_matches"
+    ],
+    "verified_to_completed": [
+      "delivery_verification_passed"
+    ],
+    "retrying_to_generating": [
+      "attempt_count_below_max",
+      "explicit_reason_codes_present"
+    ]
+  }
+}

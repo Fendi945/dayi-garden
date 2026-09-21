@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dayi.local/schemas/context.schema.json",
+  "title": "DAYI Task Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "context_id",
+    "task_id",
+    "domain",
+    "built_at",
+    "facts",
+    "hard_rules",
+    "preferences",
+    "references",
+    "unknowns",
+    "warnings",
+    "source_refs"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "context_id": {
+      "type": "string",
+      "pattern": "^DAY1-CTX-[A-Z0-9-]{6,80}$"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^DAY1-TASK-[A-Z0-9-]{6,80}$"
+    },
+    "domain": {
+      "type": "string",
+      "enum": [
+        "garden",
+        "content",
+        "cad",
+        "video",
+        "finance",
+        "knowledge",
+        "system"
+      ]
+    },
+    "built_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "baseline_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 500
+      },
+      "uniqueItems": true
+    },
+    "facts": {
+      "type": "object"
+    },
+    "hard_rules": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 1000
+      }
+    },
+    "preferences": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 1000
+      }
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ref",
+          "role"
+        ],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "visual_reference",
+              "case_reference",
+              "decision_reference",
+              "historical_reference",
+              "other"
+            ]
+          }
+        }
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 1000
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 1000
+      }
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 1000
+      },
+      "uniqueItems": true
+    },
+    "superseded_sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 1000
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "sources",
+          "resolution"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 500
+            },
+            "minItems": 2
+          },
+          "resolution": {
+            "type": "string",
+            "enum": [
+              "authoritative_source_selected",
+              "needs_authoritative_source",
+              "owner_required"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dayi.local/schemas/garden.plan.schema.json",
+  "title": "DAYI Garden Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "task_id",
+    "context_id",
+    "preserve",
+    "remove_or_reduce",
+    "problems_to_solve",
+    "spatial_strategy",
+    "planting_strategy",
+    "material_strategy",
+    "drainage_safety_notes",
+    "visual_direction",
+    "must_avoid",
+    "unknowns_blocking_precision",
+    "delivery_notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "context_id": {
+      "type": "string"
+    },
+    "preserve": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "remove_or_reduce": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "problems_to_solve": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "spatial_strategy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "planting_strategy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "material_strategy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "drainage_safety_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "visual_direction": {
+      "type": "string",
+      "maxLength": 3000
+    },
+    "must_avoid": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unknowns_blocking_precision": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "delivery_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "policy_version": "1.0",
+  "updated_at": "2026-09-21",
+  "max_default_attempts": 3,
+  "rules": [
+    {
+      "id": "R001",
+      "priority": 100,
+      "when": "task.risk_level == P0",
+      "action": "require_human_gate",
+      "reason": "Owner-only decisions may not be automated."
+    },
+    {
+      "id": "R002",
+      "priority": 95,
+      "when": "capability.maturity == TARGET",
+      "action": "deny_as_current",
+      "reason": "TARGET capabilities cannot be represented or executed as CURRENT without explicit pilot implementation."
+    },
+    {
+      "id": "R003",
+      "priority": 90,
+      "when": "task.status == delivered",
+      "action": "require_delivery_verification",
+      "reason": "Writing delivery data is not equivalent to customer receipt."
+    },
+    {
+      "id": "R004",
+      "priority": 85,
+      "when": "task.attempt.count >= task.attempt.max",
+      "action": "transition_needs_human",
+      "reason": "No unlimited automatic retries."
+    },
+    {
+      "id": "R005",
+      "priority": 80,
+      "when": "qa.status in [retry, fail] and task.attempt.count < task.attempt.max",
+      "action": "reason_aware_retry",
+      "reason": "Retry must be based on explicit QA reason codes."
+    },
+    {
+      "id": "R006",
+      "priority": 75,
+      "when": "qa.status == needs_human or qa.confidence < 0.75",
+      "action": "transition_needs_human",
+      "reason": "Low-confidence professional output requires Owner review."
+    },
+    {
+      "id": "R007",
+      "priority": 70,
+      "when": "intent == generate_direction_feedback and payment_status != confirmed",
+      "action": "block_generation_or_delivery",
+      "reason": "Actual receipt must be confirmed before customer production is treated as paid work."
+    },
+    {
+      "id": "R008",
+      "priority": 65,
+      "when": "capability_id == image.generate",
+      "action": "resolve_provider_dynamically",
+      "reason": "Business logic must not hard-code a model provider."
+    },
+    {
+      "id": "R009",
+      "priority": 60,
+      "when": "delivery_verification == pass",
+      "action": "allow_transition_completed",
+      "reason": "Completion requires verified customer-visible result."
+    }
+  ],
+  "forbidden_actions": [
+    "change_product_price_without_owner",
+    "change_payment_entity_without_owner",
+    "change_brand_core_without_owner",
+    "delete_long_term_assets_without_owner",
+    "treat_target_as_current",
+    "treat_model_success_as_customer_delivery",
+    "unbounded_retry",
+    "overwrite_frozen_ui_without_owner"
+  ]
+}

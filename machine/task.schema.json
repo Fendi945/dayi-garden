@@ -1,0 +1,339 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dayi.local/schemas/task.schema.json",
+  "title": "DAYI Agent Task",
+  "description": "Canonical task object for DAYI Agent OS. Capability maturity (CURRENT/PILOT/TARGET) is not a task runtime status.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "task_id",
+    "created_at",
+    "domain",
+    "intent",
+    "source",
+    "status",
+    "priority",
+    "risk_level",
+    "human_gate",
+    "capabilities_requested",
+    "attempt"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^DAY1-TASK-[A-Z0-9-]{6,80}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "domain": {
+      "type": "string",
+      "enum": [
+        "garden",
+        "content",
+        "cad",
+        "video",
+        "finance",
+        "knowledge",
+        "system"
+      ]
+    },
+    "intent": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 120
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "order",
+            "project",
+            "file",
+            "conversation",
+            "manual",
+            "system_event"
+          ]
+        },
+        "order_code": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 80
+        },
+        "project_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 120
+        },
+        "ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "received",
+        "payment_pending",
+        "paid",
+        "planning",
+        "generating",
+        "qa_check",
+        "retrying",
+        "needs_human",
+        "approved",
+        "delivering",
+        "delivered",
+        "verified",
+        "completed",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ]
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "P0",
+        "P1",
+        "P2"
+      ]
+    },
+    "human_gate": {
+      "type": "boolean"
+    },
+    "capabilities_requested": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_.-]{2,80}$"
+      },
+      "uniqueItems": true
+    },
+    "capabilities_resolved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "capability_id",
+          "implementation_id"
+        ],
+        "properties": {
+          "capability_id": {
+            "type": "string"
+          },
+          "implementation_id": {
+            "type": "string"
+          },
+          "maturity": {
+            "type": "string",
+            "enum": [
+              "CURRENT",
+              "PILOT",
+              "TARGET",
+              "ARCHIVED"
+            ]
+          }
+        }
+      }
+    },
+    "context_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 500
+      },
+      "uniqueItems": true
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 500
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "max"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "last_reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "ref"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "image",
+              "video",
+              "document",
+              "cad",
+              "json",
+              "link",
+              "log",
+              "other"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "qa": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "pass",
+            "retry",
+            "needs_human",
+            "fail"
+          ]
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "corrections": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      }
+    },
+    "failure": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "next_action": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 200
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner_approved": {
+          "type": "boolean"
+        },
+        "approved_by": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 120
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        }
+      }
+    }
+  }
+}

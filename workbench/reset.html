@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F8F6F3">
+<title>DAY1 · 重置密码</title>
+<style>
+:root{--bg:#F8F6F3;--paper:#FCFBF8;--ink:#222;--muted:#8B867E;--line:#DDD7CD;--red:#C6402F}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",Arial,sans-serif}
+.wrap{max-width:520px;margin:auto;padding:calc(28px + env(safe-area-inset-top)) 18px 48px}
+.brand{font-family:Georgia,"Times New Roman",serif;font-size:30px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);vertical-align:top;margin:2px 0 0 2px}.sub{font-size:10px;letter-spacing:.18em;color:var(--muted);margin-top:8px}
+.hero{margin:48px 0 20px}.hero h1{font-size:30px;font-weight:500;margin:0 0 10px}.hero p{font-size:13px;line-height:1.7;color:var(--muted)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px}
+label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}input{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;background:white;font-size:16px}.btn{width:100%;margin-top:16px;border:0;border-radius:12px;padding:14px;background:var(--ink);color:#fff;font-size:14px}.msg{font-size:12px;line-height:1.65;margin-top:14px;color:var(--muted)}.ok{color:#2f6d45}.err{color:#9f2f28}
+</style>
+</head>
+<body><div class="wrap">
+<div class="brand">day1<span class="dot"></span></div><div class="sub">DAY1 · 元点</div>
+<div class="hero"><h1>设置新密码</h1><p>这是 DAY1 工作台账号的密码恢复页面。输入两次新密码，保存后即可回到手机工作台登录。</p></div>
+<div class="card">
+<label>新密码</label><input id="p1" type="password" autocomplete="new-password" minlength="10">
+<label>再次输入</label><input id="p2" type="password" autocomplete="new-password" minlength="10">
+<button id="save" class="btn">保存新密码</button>
+<div id="msg" class="msg"></div>
+</div>
+</div>
+<script>
+const URL='https://fhvhnibznphatfnbvvnb.supabase.co';
+const KEY='sb_publishable_8_ElUXtWKbEM9Of37zdYug_mdWjcV4B';
+const msg=document.getElementById('msg');
+const h=new URLSearchParams(location.hash.replace(/^#/,''));
+const access=h.get('access_token');
+if(!access){msg.className='msg err';msg.textContent='这个重置链接无效或已经过期，请重新申请密码重置。';}
+document.getElementById('save').onclick=async()=>{
+ const p1=document.getElementById('p1').value,p2=document.getElementById('p2').value;
+ if(!access){msg.className='msg err';msg.textContent='重置链接无效或已过期。';return}
+ if(p1.length<10){msg.className='msg err';msg.textContent='新密码至少 10 位。';return}
+ if(p1!==p2){msg.className='msg err';msg.textContent='两次输入的密码不一致。';return}
+ const btn=document.getElementById('save');btn.disabled=true;btn.textContent='正在保存…';
+ try{
+  const r=await fetch(URL+'/auth/v1/user',{method:'PUT',headers:{apikey:KEY,Authorization:'Bearer '+access,'Content-Type':'application/json'},body:JSON.stringify({password:p1})});
+  const x=await r.json();if(!r.ok)throw Error(x.msg||x.message||x.error_description||'密码保存失败');
+  msg.className='msg ok';msg.innerHTML='密码已经更新成功。<br><a href="./">返回 DAY1 手机工作台登录</a>';
+  history.replaceState(null,'',location.pathname);
+ }catch(e){msg.className='msg err';msg.textContent=e.message}
+ finally{btn.disabled=false;btn.textContent='保存新密码'}
+};
+</script>
+</body></html>

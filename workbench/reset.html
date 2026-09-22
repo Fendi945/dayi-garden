@@ -11,39 +11,100 @@
 .wrap{max-width:520px;margin:auto;padding:calc(28px + env(safe-area-inset-top)) 18px 48px}
 .brand{font-family:Georgia,"Times New Roman",serif;font-size:30px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);vertical-align:top;margin:2px 0 0 2px}.sub{font-size:10px;letter-spacing:.18em;color:var(--muted);margin-top:8px}
 .hero{margin:48px 0 20px}.hero h1{font-size:30px;font-weight:500;margin:0 0 10px}.hero p{font-size:13px;line-height:1.7;color:var(--muted)}
-.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px}
-label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}input{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;background:white;font-size:16px}.btn{width:100%;margin-top:16px;border:0;border-radius:12px;padding:14px;background:var(--ink);color:#fff;font-size:14px}.msg{font-size:12px;line-height:1.65;margin-top:14px;color:var(--muted)}.ok{color:#2f6d45}.err{color:#9f2f28}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}input{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;background:white;font-size:16px}
+.btn{width:100%;margin-top:16px;border:0;border-radius:12px;padding:14px;background:var(--ink);color:#fff;font-size:14px}.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.msg{font-size:12px;line-height:1.65;margin-top:14px;color:var(--muted)}.ok{color:#2f6d45}.err{color:#9f2f28}.hidden{display:none}.back{display:block;text-align:center;margin-top:14px;font-size:11px;color:var(--muted);text-decoration:none}
 </style>
 </head>
 <body><div class="wrap">
 <div class="brand">day1<span class="dot"></span></div><div class="sub">DAY1 · 元点</div>
-<div class="hero"><h1>设置新密码</h1><p>这是 DAY1 工作台账号的密码恢复页面。输入两次新密码，保存后即可回到手机工作台登录。</p></div>
-<div class="card">
+<div class="hero"><h1>重置密码</h1><p>如果旧链接已经失效，可以在这里重新发一封。只使用最新一封重置邮件。</p></div>
+
+<div id="setCard" class="card hidden">
 <label>新密码</label><input id="p1" type="password" autocomplete="new-password" minlength="10">
 <label>再次输入</label><input id="p2" type="password" autocomplete="new-password" minlength="10">
 <button id="save" class="btn">保存新密码</button>
-<div id="msg" class="msg"></div>
+<div id="setMsg" class="msg"></div>
 </div>
+
+<div id="requestCard" class="card">
+<label>登录邮箱</label><input id="email" type="email" value="day1garden58@gmail.com" autocomplete="email">
+<button id="send" class="btn">发送新的重置邮件</button>
+<div id="requestMsg" class="msg"></div>
+</div>
+
+<a class="back" href="./">返回 DAY1 手机工作台</a>
 </div>
 <script>
 const URL='https://fhvhnibznphatfnbvvnb.supabase.co';
 const KEY='sb_publishable_8_ElUXtWKbEM9Of37zdYug_mdWjcV4B';
-const msg=document.getElementById('msg');
-const h=new URLSearchParams(location.hash.replace(/^#/,''));
-const access=h.get('access_token');
-if(!access){msg.className='msg err';msg.textContent='这个重置链接无效或已经过期，请重新申请密码重置。';}
-document.getElementById('save').onclick=async()=>{
- const p1=document.getElementById('p1').value,p2=document.getElementById('p2').value;
- if(!access){msg.className='msg err';msg.textContent='重置链接无效或已过期。';return}
- if(p1.length<10){msg.className='msg err';msg.textContent='新密码至少 10 位。';return}
- if(p1!==p2){msg.className='msg err';msg.textContent='两次输入的密码不一致。';return}
- const btn=document.getElementById('save');btn.disabled=true;btn.textContent='正在保存…';
+const MOBILE_SESSION='day1_mobile_session_v1';
+const REDIRECT='https://fendi945.github.io/dayi-garden/workbench/reset.html';
+const q=s=>document.querySelector(s);
+const hash=new URLSearchParams(location.hash.replace(/^#/,''));
+const query=new URLSearchParams(location.search);
+const access=hash.get('access_token');
+const errorCode=hash.get('error_code')||query.get('error_code')||'';
+const errorDesc=hash.get('error_description')||query.get('error_description')||'';
+
+function currentStoredToken(){
  try{
-  const r=await fetch(URL+'/auth/v1/user',{method:'PUT',headers:{apikey:KEY,Authorization:'Bearer '+access,'Content-Type':'application/json'},body:JSON.stringify({password:p1})});
+   const s=JSON.parse(localStorage.getItem(MOBILE_SESSION)||'null');
+   return s?.access_token||null;
+ }catch{return null}
+}
+let token=access||currentStoredToken();
+
+function showSet(message){
+ q('#setCard').classList.remove('hidden');
+ if(message){q('#setMsg').textContent=message}
+}
+if(token){
+ showSet(access?'重置链接有效，可以设置新密码。':'检测到当前手机已有登录态，可以直接设置新密码。');
+ q('#requestCard').classList.add('hidden');
+} else if(errorCode||errorDesc){
+ q('#requestMsg').className='msg err';
+ q('#requestMsg').textContent='这封重置邮件已经失效：'+(errorDesc||errorCode)+'。请点下面按钮重新发送，并只打开最新一封邮件。';
+}
+
+q('#send').onclick=async()=>{
+ const email=q('#email').value.trim();
+ if(!email){q('#requestMsg').className='msg err';q('#requestMsg').textContent='请填写邮箱。';return}
+ const btn=q('#send');btn.disabled=true;btn.textContent='正在发送…';
+ try{
+  const r=await fetch(URL+'/auth/v1/recover?redirect_to='+encodeURIComponent(REDIRECT),{
+   method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email})
+  });
+  const x=await r.json().catch(()=>({}));
+  if(!r.ok)throw Error(x.msg||x.message||x.error_description||'发送失败');
+  q('#requestMsg').className='msg ok';
+  q('#requestMsg').textContent='新的重置邮件已经发送。请打开邮箱里最新的一封 Reset Password 邮件；旧邮件不要再点。';
+ }catch(e){q('#requestMsg').className='msg err';q('#requestMsg').textContent=e.message}
+ finally{btn.disabled=false;btn.textContent='发送新的重置邮件'}
+};
+
+q('#save').onclick=async()=>{
+ const p1=q('#p1').value,p2=q('#p2').value;
+ if(!token){q('#setMsg').className='msg err';q('#setMsg').textContent='当前没有有效的恢复凭证，请重新发送重置邮件。';return}
+ if(p1.length<10){q('#setMsg').className='msg err';q('#setMsg').textContent='新密码至少 10 位。';return}
+ if(p1!==p2){q('#setMsg').className='msg err';q('#setMsg').textContent='两次输入的密码不一致。';return}
+ const btn=q('#save');btn.disabled=true;btn.textContent='正在保存…';
+ try{
+  const r=await fetch(URL+'/auth/v1/user',{
+   method:'PUT',
+   headers:{apikey:KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},
+   body:JSON.stringify({password:p1})
+  });
   const x=await r.json();if(!r.ok)throw Error(x.msg||x.message||x.error_description||'密码保存失败');
-  msg.className='msg ok';msg.innerHTML='密码已经更新成功。<br><a href="./">返回 DAY1 手机工作台登录</a>';
+  q('#setMsg').className='msg ok';
+  q('#setMsg').textContent='密码已经更新成功。现在可以返回工作台登录。';
+  localStorage.removeItem(MOBILE_SESSION);
   history.replaceState(null,'',location.pathname);
- }catch(e){msg.className='msg err';msg.textContent=e.message}
+ }catch(e){
+  q('#setMsg').className='msg err';
+  q('#setMsg').textContent=e.message;
+ }
  finally{btn.disabled=false;btn.textContent='保存新密码'}
 };
 </script>

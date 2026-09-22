@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F8F6F3">
+<title>DAY1 · Mobile Workbench</title>
+<style>
+:root{--bg:#F8F6F3;--paper:#FCFBF8;--ink:#222;--muted:#8B867E;--line:#DDD7CD;--red:#C6402F;--soft:#F0EBE3}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",Arial,sans-serif}
+.wrap{max-width:560px;margin:auto;padding:calc(24px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom))}
+.brand{font-family:Georgia,"Times New Roman",serif;font-size:30px;letter-spacing:-1px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);vertical-align:top;margin:2px 0 0 2px}
+.sub{font-size:10px;letter-spacing:.18em;color:var(--muted);margin-top:8px}.hero{margin:44px 0 22px}.hero h1{font-size:30px;font-weight:500;margin:0 0 10px}.hero p{font-size:13px;color:var(--muted);line-height:1.7}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0}.card h2{font-size:14px;margin:0 0 14px}
+input,textarea{width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px;font:inherit;color:var(--ink);outline:none}textarea{min-height:132px;resize:vertical;font-size:17px;line-height:1.6}
+label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{width:100%;border:0;border-radius:12px;background:var(--ink);color:#fff;padding:14px 16px;font-size:14px;margin-top:14px}.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.status{font-size:11px;color:var(--muted);margin-top:10px}.hidden{display:none}.result{border-left:3px solid var(--red);padding-left:12px;margin-top:16px}.result b{font-size:14px}.result p{font-size:11px;color:var(--muted);line-height:1.65}
+.bars{display:grid;gap:8px;margin-top:14px}.bar{display:grid;grid-template-columns:92px 1fr 40px;gap:8px;align-items:center;font-size:10px;color:var(--muted)}.track{height:6px;background:var(--soft);border-radius:99px;overflow:hidden}.fill{height:100%;background:var(--ink)}
+.top{display:flex;justify-content:space-between;align-items:start}.logout{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 11px;font-size:10px;color:var(--muted)}
+.note{font-size:10px;color:var(--muted);line-height:1.6;margin-top:12px}
+</style>
+</head>
+<body><div class="wrap">
+<div class="top"><div><div class="brand">day1<span class="dot"></span></div><div class="sub">DAY1 · 元点</div></div><button id="logout" class="logout hidden">退出</button></div>
+
+<section id="login">
+  <div class="hero"><h1>手机工作台</h1><p>登录后进入 DAY1。未登录时不会加载你的工作台内容，也不能调用 Jev。</p></div>
+  <div class="card">
+    <h2>登录</h2>
+    <label>邮箱</label><input id="email" type="email" autocomplete="username">
+    <label>密码</label><input id="password" type="password" autocomplete="current-password">
+    <button id="loginBtn" class="btn">进入 DAY1</button>
+    <div id="loginMsg" class="status"></div>
+  </div>
+</section>
+
+<section id="app" class="hidden">
+  <div class="hero"><h1>大一，你现在想做什么？</h1><p>直接说。需要做取舍时，DAY1 会把问题整理成决策结构，再交给 Jev。</p></div>
+  <div class="card">
+    <textarea id="prompt" placeholder="比如：我现在应该继续完善自动化，还是先集中精力获客？"></textarea>
+    <button id="askBtn" class="btn">交给 DAY1</button>
+    <div id="jevStatus" class="status">Jev · 检查中</div>
+    <div id="result"></div>
+  </div>
+  <div class="note">Jev 只提供概率与置信度，不替你做最终决定。TypeSafe API Key 不会出现在手机端。</div>
+</section>
+<script>
+const SUPABASE_URL='https://fhvhnibznphatfnbvvnb.supabase.co';
+const PUBLIC_KEY='sb_publishable_8_ElUXtWKbEM9Of37zdYug_mdWjcV4B';
+const DECISION_URL='https://fhvhnibznphatfnbvvnb.supabase.co/functions/v1/workbench-decision-api';
+const KEY='day1_mobile_session_v1';
+const q=s=>document.querySelector(s);
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function save(x){x?localStorage.setItem(KEY,JSON.stringify(x)):localStorage.removeItem(KEY)}
+function read(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch{return null}}
+function showApp(session){q('#login').classList.add('hidden');q('#app').classList.remove('hidden');q('#logout').classList.remove('hidden');checkStatus(session)}
+function showLogin(){q('#app').classList.add('hidden');q('#login').classList.remove('hidden');q('#logout').classList.add('hidden')}
+async function login(){
+ q('#loginBtn').disabled=true;q('#loginMsg').textContent='正在登录…';
+ try{
+  const r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:PUBLIC_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:q('#email').value.trim(),password:q('#password').value})});
+  const x=await r.json();if(!r.ok)throw Error('邮箱或密码未通过验证。');save(x);q('#password').value='';q('#loginMsg').textContent='';showApp(x);
+ }catch(e){q('#loginMsg').textContent=e.message}finally{q('#loginBtn').disabled=false}
+}
+async function refresh(s){
+ if(!s?.refresh_token)throw Error('请重新登录。');
+ const r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:PUBLIC_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:s.refresh_token})});
+ const x=await r.json();if(!r.ok)throw Error('登录已过期，请重新登录。');save(x);return x;
+}
+async function session(){let s=read();if(!s?.access_token)throw Error('请重新登录。');if(s.expires_at&&s.expires_at*1000<Date.now()+30000)s=await refresh(s);return s}
+async function call(action,data={}){
+ const s=await session();
+ const r=await fetch(DECISION_URL,{method:'POST',headers:{apikey:PUBLIC_KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:JSON.stringify({action,...data})});
+ const x=await r.json();if(r.status===401){save(null);showLogin();throw Error('登录已过期，请重新登录。')}if(!r.ok)throw Error(x.message||x.error||'Jev 请求未完成');return x;
+}
+function inferOptions(text){
+ const parts=text.replace(/[？?。]+$/,'').split(/\s*(?:还是|或者|或是|\bvs\.?\b|\bor\b)\s*/i).map(s=>s.trim()).filter(s=>s.length>=2);
+ if(parts.length>=2&&parts.length<=6)return parts.map((label,i)=>({id:'option_'+(i+1),label:label.slice(0,120),description:'用户明确提出的候选方案'}));
+ return [
+  {id:'act_now',label:'现在行动',description:'先推进一个小而可逆的动作'},
+  {id:'gather_info',label:'先补信息',description:'先补最可能改变判断的关键证据'},
+  {id:'defer',label:'暂缓决定',description:'保留选择权，等待条件变化'},
+  {id:'stop',label:'停止投入',description:'把资源转向更重要的事项'}
+ ];
+}
+function pct(v){return Number.isFinite(v)?Math.round(v*100)+'%':'—'}
+function render(d,options){
+ const labels=Object.fromEntries(options.map(o=>[o.id,o.label])), probs=d.option_probabilities||{};
+ const rows=Object.entries(probs).sort((a,b)=>Number(b[1])-Number(a[1])).map(([id,p])=>'<div class="bar"><span>'+esc(labels[id]||id)+'</span><span class="track"><span class="fill" style="width:'+Math.max(0,Math.min(100,Number(p)*100))+'%"></span></span><span>'+pct(Number(p))+'</span></div>').join('');
+ q('#result').innerHTML='<div class="result"><b>Jev 判断：'+esc(d.selected_option?.label||labels[d.selected_option_id]||d.selected_option_id)+'</b><p>选项置信度 '+pct(d.option_confidence)+' · 需要补信息 '+pct(d.need_more_information_probability)+' · 适合先做小测试 '+pct(d.safe_to_test_now_probability)+'</p></div>'+(rows?'<div class="bars">'+rows+'</div>':'');
+}
+async function ask(){
+ const text=q('#prompt').value.trim();if(text.length<3)return;
+ q('#askBtn').disabled=true;q('#askBtn').textContent='Jev 判断中…';
+ try{
+  const options=inferOptions(text);
+  const x=await call('evaluate',{decision:{objective:text,context:text,options,constraints:[],evidence:[],unknowns:[]}});
+  render(x.decision,options);
+ }catch(e){q('#result').innerHTML='<div class="result"><b>暂时没有返回结果</b><p>'+esc(e.message)+'</p></div>'}
+ finally{q('#askBtn').disabled=false;q('#askBtn').textContent='交给 DAY1'}
+}
+async function checkStatus(){try{const x=await call('status');q('#jevStatus').textContent=x.configured?'Jev · 在线':'Jev · 待配置'}catch{q('#jevStatus').textContent='Jev · 未连接'}}
+q('#loginBtn').onclick=login;q('#askBtn').onclick=ask;q('#logout').onclick=()=>{save(null);showLogin()};q('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+const s=read();s?.access_token?showApp(s):showLogin();
+</script></div></body></html>

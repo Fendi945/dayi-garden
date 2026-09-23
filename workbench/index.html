@@ -58,6 +58,7 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{wid
 const SUPABASE_URL='https://fhvhnibznphatfnbvvnb.supabase.co';
 const PUBLIC_KEY='sb_publishable_8_ElUXtWKbEM9Of37zdYug_mdWjcV4B';
 const DECISION_URL='https://fhvhnibznphatfnbvvnb.supabase.co/functions/v1/workbench-decision-api';
+const ROUTER_URL='https://fhvhnibznphatfnbvvnb.supabase.co/functions/v1/workbench-router-api';
 const KEY='day1_mobile_session_v1';
 const q=s=>document.querySelector(s);
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
@@ -123,13 +124,69 @@ function render(d,options){
  const rows=Object.entries(probs).sort((a,b)=>Number(b[1])-Number(a[1])).map(([id,p])=>'<div class="bar"><span>'+esc(labels[id]||id)+'</span><span class="track"><span class="fill" style="width:'+Math.max(0,Math.min(100,Number(p)*100))+'%"></span></span><span>'+pct(Number(p))+'</span></div>').join('');
  q('#result').innerHTML='<div class="result"><b>Jev 判断：'+esc(d.selected_option?.label||labels[d.selected_option_id]||d.selected_option_id)+'</b><p>选项置信度 '+pct(d.option_confidence)+' · 需要补信息 '+pct(d.need_more_information_probability)+' · 适合先做小测试 '+pct(d.safe_to_test_now_probability)+'</p></div>'+(rows?'<div class="bars">'+rows+'</div>':'');
 }
+async function routeText(text){
+ const s=await session();
+ const r=await fetch(ROUTER_URL,{
+  method:'POST',
+  headers:{apikey:PUBLIC_KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},
+  body:JSON.stringify({text})
+ });
+ const x=await r.json();
+ if(r.status===401){save(null);showLogin();throw Error('登录已过期，请重新登录。')}
+ if(!r.ok)throw Error(x.error||'DAY1 路由没有完成');
+ return x;
+}
+
+async function handleOrders(text){
+ q('#jevStatus').textContent='DAY1 · 订单与交付';
+ const m=text.match(/DAY1-[A-Z0-9-]+/i);
+ let query=sb.from('orders')
+   .select('order_code,created_at,status,payment_status,process_status,completed_at')
+   .order('created_at',{ascending:false})
+   .limit(m?1:5);
+ if(m)query=query.eq('order_code',m[0].toUpperCase());
+ const {data,error}=await query;
+ if(error)throw error;
+ if(!data?.length){
+  q('#result').innerHTML='<div class="result"><b>没有找到对应订单</b><p>可以直接输入订单号，例如 DAY1-xxxx。</p></div>';
+  return;
+ }
+ const rows=data.map(o=>{
+   const when=o.created_at?new Date(o.created_at).toLocaleString('zh-CN'):'';
+   return '<div style="padding:10px 0;border-bottom:1px solid var(--line)"><b>'+esc(o.order_code||'未编号')+'</b><p style="margin:5px 0 0;color:var(--muted);font-size:11px">付款 '+esc(o.payment_status||'—')+' · 流程 '+esc(o.process_status||'—')+' · '+esc(when)+'</p></div>';
+ }).join('');
+ q('#result').innerHTML='<div class="result"><b>'+(m?'订单结果':'最近订单')+'</b><p>来自 DAY1 云端订单库。</p></div><div>'+rows+'</div>';
+}
+
+function renderRoutedModule(route){
+ q('#jevStatus').textContent='DAY1 · '+esc(route.label);
+ const copy={
+  design:'设计模块已识别。下一步接入庭院方案、效果图与专业图纸 Agent。',
+  content:'内容模块已识别。下一步接入口播、公众号、封面与发布工作流。',
+  finance:'财务模块已识别。独立工作台的财务连接器还未接入，当前不会读取你的财务数据。',
+  files:'文件模块已识别。下一步接入 DAY1 知识库与文件检索。',
+  agent:'Agent / 自动化模块已识别。下一步接入任务编排和执行状态。',
+  general:'通用工作台模块已识别。下一步接入通用对话与任务编排。'
+ }[route.route]||'模块已识别，能力正在接入。';
+ q('#result').innerHTML='<div class="result"><b>已路由：'+esc(route.label)+'</b><p>'+esc(copy)+'</p></div>';
+}
+
 async function ask(){
  const text=q('#prompt').value.trim();if(text.length<3)return;
- q('#askBtn').disabled=true;q('#askBtn').textContent='Jev 判断中…';
+ q('#askBtn').disabled=true;q('#askBtn').textContent='DAY1 正在判断…';q('#result').innerHTML='';
  try{
-  const options=inferOptions(text);
-  const x=await call('evaluate',{decision:{objective:text,context:text,options,constraints:[],evidence:[],unknowns:[]}});
-  render(x.decision,options);
+  const route=await routeText(text);
+  if(route.route==='orders'){
+    await handleOrders(text);
+  }else if(route.route==='decision'){
+    q('#jevStatus').textContent='DAY1 · Jev 决策';
+    q('#askBtn').textContent='Jev 判断中…';
+    const options=inferOptions(text);
+    const x=await call('evaluate',{decision:{objective:text,context:text,options,constraints:[],evidence:[],unknowns:[]}});
+    render(x.decision,options);
+  }else{
+    renderRoutedModule(route);
+  }
  }catch(e){q('#result').innerHTML='<div class="result"><b>暂时没有返回结果</b><p>'+esc(e.message)+'</p></div>'}
  finally{q('#askBtn').disabled=false;q('#askBtn').textContent='交给 DAY1'}
 }

@@ -160,15 +160,25 @@ async function handleOrders(text){
 
 function renderRoutedModule(route){
  q('#jevStatus').textContent='DAY1 · '+esc(route.label);
+ const plan=route.task?.plan||{};
  const copy={
-  design:'设计模块已识别。下一步接入庭院方案、效果图与专业图纸 Agent。',
-  content:'内容模块已识别。下一步接入口播、公众号、封面与发布工作流。',
-  finance:'财务模块已识别。独立工作台的财务连接器还未接入，当前不会读取你的财务数据。',
-  files:'文件模块已识别。下一步接入 DAY1 知识库与文件检索。',
-  agent:'Agent / 自动化模块已识别。下一步接入任务编排和执行状态。',
-  general:'通用工作台模块已识别。下一步接入通用对话与任务编排。'
- }[route.route]||'模块已识别，能力正在接入。';
- q('#result').innerHTML='<div class="result"><b>已路由：'+esc(route.label)+'</b><p>'+esc(copy)+'</p></div>';
+  design:'设计任务已经进入 DAY1 任务队列，并生成了专业 brief。',
+  content:'内容任务已经进入 DAY1 任务队列，并生成了创作 brief。',
+  finance:'财务模块已识别并记录任务。独立工作台的财务数据连接器还未接入。',
+  files:'文件模块已识别并记录任务。下一步接入 DAY1 知识库检索。',
+  agent:'Agent / 自动化模块已识别并记录任务。下一步接执行器与状态回传。',
+  general:'通用任务已记录。下一步接通用执行器。'
+ }[route.route]||'任务已进入 DAY1。';
+
+ let detail='';
+ if(route.route==='content'){
+   detail='<p><b>类型：</b>'+esc(plan.format||'内容')+'<br><b>结构：</b>'+esc((plan.structure||[]).join(' → '))+'<br><b>风格：</b>'+esc((plan.voice||[]).join(' / '))+'</p>';
+ }
+ if(route.route==='design'){
+   detail='<p><b>任务：</b>'+esc(plan.deliverable||'庭院设计判断')+'<br><b>原则：</b>'+esc((plan.principles||[]).join(' / '))+(plan.concerns?.length?'<br><b>重点：</b>'+esc(plan.concerns.join(' / ')):'')+'</p>';
+ }
+ const taskId=route.task?.id?'<p>任务 ID：'+esc(route.task.id.slice(0,8))+'</p>':'';
+ q('#result').innerHTML='<div class="result"><b>已路由：'+esc(route.label)+'</b><p>'+esc(copy)+'</p>'+detail+taskId+'</div>';
 }
 
 async function ask(){

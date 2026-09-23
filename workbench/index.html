@@ -103,7 +103,12 @@ async function setNewPassword(){
   const {error}=await sb.auth.updateUser({password:p});
   if(error)throw error;
   q('#newPassword').value='';q('#confirmPassword').value='';
-  q('#passwordMsg').textContent='新密码已设置成功。以后可以使用 Google 登录，也可以使用邮箱 + 新密码登录。';
+  q('#passwordMsg').textContent='新密码已设置成功，正在返回工作台…';
+  setTimeout(()=>{
+    q('#accountCard').classList.add('hidden');
+    q('#app').classList.remove('hidden');
+    q('#passwordMsg').textContent='';
+  },700);
  }catch(e){q('#passwordMsg').textContent=e.message||'密码设置失败。'}
  finally{q('#setPasswordBtn').disabled=false}
 }

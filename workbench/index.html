@@ -21,7 +21,7 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{wid
 </style>
 </head>
 <body><div class="wrap">
-<div class="top"><div><div class="brand">day1<span class="dot"></span></div><div class="sub">DAY1 · 元点</div></div><button id="logout" class="logout hidden">退出</button></div>
+<div class="top"><div><div class="brand">day1<span class="dot"></span></div><div class="sub">DAY1 · 元点</div></div><div style="display:flex;gap:8px"><button id="accountBtn" class="logout hidden">账户</button><button id="logout" class="logout hidden">退出</button></div></div>
 
 <section id="login">
   <div class="hero"><h1>手机工作台</h1><p>登录后进入 DAY1。未登录时不会加载你的工作台内容，也不能调用 Jev。</p></div>
@@ -53,6 +53,20 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{wid
   </div>
   <div class="note">Jev 只提供概率与置信度，不替你做最终决定。TypeSafe API Key 不会出现在手机端。</div>
 </section>
+
+<section id="accountCard" class="hidden">
+  <div class="card">
+    <h2>账户设置</h2>
+    <label>新密码</label>
+    <input id="newPassword" type="password" autocomplete="new-password" placeholder="至少 8 位">
+    <label>确认新密码</label>
+    <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="再次输入">
+    <button id="setPasswordBtn" class="btn">设置新密码</button>
+    <button id="closeAccountBtn" class="btn ghost" type="button">返回工作台</button>
+    <div id="passwordMsg" class="status"></div>
+  </div>
+</section>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL='https://fhvhnibznphatfnbvvnb.supabase.co';
@@ -64,8 +78,8 @@ const q=s=>document.querySelector(s);
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 function save(x){x?localStorage.setItem(KEY,JSON.stringify(x)):localStorage.removeItem(KEY)}
 function read(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch{return null}}
-function showApp(session){q('#login').classList.add('hidden');q('#app').classList.remove('hidden');q('#logout').classList.remove('hidden');checkStatus(session)}
-function showLogin(){q('#app').classList.add('hidden');q('#login').classList.remove('hidden');q('#logout').classList.add('hidden')}
+function showApp(session){q('#login').classList.add('hidden');q('#app').classList.remove('hidden');q('#logout').classList.remove('hidden');q('#accountBtn').classList.remove('hidden');checkStatus(session)}
+function showLogin(){q('#app').classList.add('hidden');q('#login').classList.remove('hidden');q('#logout').classList.add('hidden');q('#accountBtn').classList.add('hidden');q('#accountCard')?.remove()}
 async function googleLogin(){
  q('#googleLoginBtn').disabled=true;q('#loginMsg').textContent='正在打开 Google 登录…';
  try{
@@ -76,6 +90,31 @@ async function googleLogin(){
   q('#loginMsg').textContent=e.message||'Google 登录没有完成。';
   q('#googleLoginBtn').disabled=false;
  }
+}
+
+async function setNewPassword(){
+ const p=q('#newPassword').value;
+ const c=q('#confirmPassword').value;
+ q('#passwordMsg').textContent='';
+ if(p.length<8){q('#passwordMsg').textContent='密码至少 8 位。';return}
+ if(p!==c){q('#passwordMsg').textContent='两次输入的密码不一致。';return}
+ q('#setPasswordBtn').disabled=true;q('#passwordMsg').textContent='正在设置新密码…';
+ try{
+  const {error}=await sb.auth.updateUser({password:p});
+  if(error)throw error;
+  q('#newPassword').value='';q('#confirmPassword').value='';
+  q('#passwordMsg').textContent='新密码已设置成功。以后可以使用 Google 登录，也可以使用邮箱 + 新密码登录。';
+ }catch(e){q('#passwordMsg').textContent=e.message||'密码设置失败。'}
+ finally{q('#setPasswordBtn').disabled=false}
+}
+
+function openAccount(){
+ q('#app').classList.add('hidden');
+ q('#accountCard').classList.remove('hidden');
+}
+function closeAccount(){
+ q('#accountCard').classList.add('hidden');
+ q('#app').classList.remove('hidden');
 }
 
 async function login(){
@@ -205,6 +244,9 @@ const sb=window.supabase.createClient(SUPABASE_URL,PUBLIC_KEY,{auth:{persistSess
 
 q('#googleLoginBtn').onclick=googleLogin;
 q('#loginBtn').onclick=login;
+q('#accountBtn').onclick=openAccount;
+q('#setPasswordBtn').onclick=setNewPassword;
+q('#closeAccountBtn').onclick=closeAccount;
 q('#togglePassword').onclick=()=>q('#passwordBox').classList.toggle('hidden');
 q('#askBtn').onclick=ask;
 q('#logout').onclick=async()=>{await sb.auth.signOut();save(null);showLogin()};

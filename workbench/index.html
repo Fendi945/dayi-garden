@@ -26,11 +26,24 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{wid
 <section id="login">
   <div class="hero"><h1>手机工作台</h1><p>登录后进入 DAY1。未登录时不会加载你的工作台内容，也不能调用 Jev。</p></div>
   <div class="card">
-    <h2>登录</h2>
-    <label>邮箱</label><input id="email" type="email" autocomplete="username">
-    <label>密码</label><input id="password" type="password" autocomplete="current-password">
-    <button id="loginBtn" class="btn">进入 DAY1</button>
-    <a href="./recover-v2.html" style="display:block;text-align:center;margin-top:12px;font-size:11px;color:#8B867E;text-decoration:none">忘记密码？</a>
+    <h2>邮箱验证码登录</h2>
+    <label>邮箱</label>
+    <input id="email" type="email" value="day1garden58@gmail.com" autocomplete="email">
+    <button id="sendOtpBtn" class="btn">发送 6 位验证码</button>
+
+    <div id="otpBox" class="hidden">
+      <label>6 位验证码</label>
+      <input id="otp" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000">
+      <button id="verifyOtpBtn" class="btn">进入 DAY1</button>
+    </div>
+
+    <button id="togglePassword" class="btn ghost" type="button">使用密码登录（备用）</button>
+    <div id="passwordBox" class="hidden">
+      <label>密码</label>
+      <input id="password" type="password" autocomplete="current-password">
+      <button id="loginBtn" class="btn">使用密码进入</button>
+    </div>
+
     <div id="loginMsg" class="status"></div>
   </div>
 </section>
@@ -56,6 +69,42 @@ function save(x){x?localStorage.setItem(KEY,JSON.stringify(x)):localStorage.remo
 function read(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch{return null}}
 function showApp(session){q('#login').classList.add('hidden');q('#app').classList.remove('hidden');q('#logout').classList.remove('hidden');checkStatus(session)}
 function showLogin(){q('#app').classList.add('hidden');q('#login').classList.remove('hidden');q('#logout').classList.add('hidden')}
+async function sendOtp(){
+ const email=q('#email').value.trim();
+ if(!email){q('#loginMsg').textContent='请填写邮箱。';return}
+ q('#sendOtpBtn').disabled=true;q('#loginMsg').textContent='正在发送验证码…';
+ try{
+  const r=await fetch(SUPABASE_URL+'/auth/v1/otp',{
+    method:'POST',
+    headers:{apikey:PUBLIC_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({email,create_user:false})
+  });
+  const x=await r.json().catch(()=>({}));
+  if(!r.ok)throw Error(x.msg||x.message||x.error_description||'验证码发送失败');
+  q('#otpBox').classList.remove('hidden');
+  q('#loginMsg').textContent='验证码已发送到邮箱。请输入邮件里的 6 位数字。';
+  setTimeout(()=>q('#otp')?.focus(),100);
+ }catch(e){q('#loginMsg').textContent=e.message}
+ finally{q('#sendOtpBtn').disabled=false}
+}
+
+async function verifyOtp(){
+ const email=q('#email').value.trim(), token=q('#otp').value.trim();
+ if(!/^\d{6}$/.test(token)){q('#loginMsg').textContent='请输入 6 位验证码。';return}
+ q('#verifyOtpBtn').disabled=true;q('#loginMsg').textContent='正在验证…';
+ try{
+  const r=await fetch(SUPABASE_URL+'/auth/v1/verify',{
+    method:'POST',
+    headers:{apikey:PUBLIC_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({type:'email',email,token})
+  });
+  const x=await r.json();
+  if(!r.ok)throw Error(x.msg||x.message||x.error_description||'验证码无效或已过期');
+  save(x);q('#otp').value='';q('#loginMsg').textContent='';showApp(x);
+ }catch(e){q('#loginMsg').textContent=e.message}
+ finally{q('#verifyOtpBtn').disabled=false}
+}
+
 async function login(){
  q('#loginBtn').disabled=true;q('#loginMsg').textContent='正在登录…';
  try{
@@ -101,6 +150,13 @@ async function ask(){
  finally{q('#askBtn').disabled=false;q('#askBtn').textContent='交给 DAY1'}
 }
 async function checkStatus(){try{const x=await call('status');q('#jevStatus').textContent=x.configured?'Jev · 在线':'Jev · 待配置'}catch{q('#jevStatus').textContent='Jev · 未连接'}}
-q('#loginBtn').onclick=login;q('#askBtn').onclick=ask;q('#logout').onclick=()=>{save(null);showLogin()};q('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+q('#sendOtpBtn').onclick=sendOtp;
+q('#verifyOtpBtn').onclick=verifyOtp;
+q('#loginBtn').onclick=login;
+q('#togglePassword').onclick=()=>q('#passwordBox').classList.toggle('hidden');
+q('#askBtn').onclick=ask;
+q('#logout').onclick=()=>{save(null);showLogin()};
+q('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+q('#otp').addEventListener('keydown',e=>{if(e.key==='Enter')verifyOtp()});
 const s=read();s?.access_token?showApp(s):showLogin();
 </script></div></body></html>

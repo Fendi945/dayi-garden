@@ -1,14 +1,7 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>经营仪表盘｜大一造园</title>
-<meta name="robots" content="noindex,nofollow">
-<style>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>收银与反馈｜大一造园</title><style>
 :root{
   --bg:#f8f6f3;--paper:#fffdf9;--ink:#222;--muted:#7c756f;
-  --line:#ded8d1;--red:#c6402f;--soft:#eee9e3;--ok:#496a4c;
+  --line:#ded8d1;--red:#c6402f;--soft:#eee9e3;--ok:#222222;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
@@ -27,19 +20,19 @@ button,input{font:inherit}
 .eyebrow{font-size:11px;letter-spacing:.18em;color:var(--red);font-weight:700;margin-bottom:10px}
 h1{font-family:Georgia,"Noto Serif SC","Songti SC",serif;font-size:clamp(34px,6vw,54px);font-weight:500;margin:0;line-height:1.15}
 .hero p{color:var(--muted);margin:12px 0 0;font-size:14px}
-.card{background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:22px;padding:22px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:22px}
 .login{max-width:480px;margin:50px auto}
 .login h2{font-family:Georgia,"Noto Serif SC",serif;font-weight:500;margin:0 0 8px}
 .field{margin:16px 0}
 label{display:block;font-size:13px;margin-bottom:7px}
-input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;outline:none}
+input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14px;background:var(--paper);outline:none}
 input:focus{border-color:#999}
 .btn{border:0;border-radius:999px;background:var(--red);color:#fff;padding:13px 20px;cursor:pointer}
 .btn:disabled{opacity:.5}
 .error{color:#a33;font-size:13px;margin-top:12px;line-height:1.6}
 .hidden{display:none!important}
 .range{display:flex;gap:8px;margin:14px 0 22px;flex-wrap:wrap}
-.range button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 13px;font-size:13px;cursor:pointer}
+.range button{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 13px;font-size:13px;cursor:pointer}
 .range button.active{background:var(--ink);color:#fff;border-color:var(--ink)}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
 .metric{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px}
@@ -61,7 +54,7 @@ input:focus{border-color:#999}
 .source.header{color:var(--muted);font-size:11px}
 .source div:not(:first-child){text-align:right}
 .orders{display:grid;gap:10px}
-.order{border:1px solid var(--line);background:#fff;border-radius:16px;padding:15px}
+.order{border:1px solid var(--line);background:var(--paper);border-radius:16px;padding:15px}
 .order-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
 .order-code{font:16px Georgia,serif}
 .amount{font:18px Georgia,serif}
@@ -81,12 +74,12 @@ input:focus{border-color:#999}
 .img-placeholder{min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:12px;background:#f2eee9;border-radius:12px;padding:16px}
 .prompt-box{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;background:#f5f1eb;border-radius:10px;padding:12px;max-height:360px;overflow:auto}
 .need-tags{display:flex;flex-wrap:wrap;gap:7px}
-.need-tags span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:5px 9px;background:#fff}
+.need-tags span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:5px 9px;background:var(--paper)}
 .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .order-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .action-primary{border:0;border-radius:999px;background:var(--red);color:#fff;padding:11px 16px;cursor:pointer}
 .action-primary:disabled{opacity:.5;cursor:not-allowed}
-.action-secondary{border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);padding:11px 16px;cursor:pointer}
+.action-secondary{border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);padding:11px 16px;cursor:pointer}
 .action-note{font-size:12px;line-height:1.7;color:var(--muted);margin-top:8px}
 @media(max-width:720px){
   .detail-grid,.result-grid{grid-template-columns:1fr}
@@ -101,384 +94,15 @@ input:focus{border-color:#999}
   .source{grid-template-columns:1.25fr repeat(3,.65fr);font-size:12px}
   .source .hide-mobile{display:none}
 }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <header class="topbar">
-    <div class="brand">
-      <div class="wordmark">day<span class="i">i</span></div>
-      <div class="brand-cn">大一造园</div>
-    </div>
-    <div class="top-actions">
-      <span id="adminEmail" class="refresh"></span>
-      <button id="logoutBtn" class="linkbtn hidden">退出</button>
-    </div>
-  </header>
 
-  <section id="loginView" class="login card">
-    <div class="eyebrow">PRIVATE DASHBOARD</div>
-    <h2>经营仪表盘</h2>
-    <p style="font-size:13px;color:var(--muted);line-height:1.7">仅管理员可查看。登录后手机会保存会话，不需要每次重新输入。</p>
-    <div class="field"><label>管理员邮箱</label><input id="email" type="email" value="day1garden58@gmail.com" autocomplete="username"></div>
-    <div class="field"><label>密码</label><input id="password" type="password" autocomplete="current-password" placeholder="输入 Supabase 管理员账号密码"></div>
-    <button id="loginBtn" class="btn">登录仪表盘</button>
-    <div id="loginError" class="error"></div>
-  </section>
-
-  <main id="dashboard" class="hidden">
-    <section class="hero">
-      <div class="eyebrow">DAYI · BUSINESS PULSE</div>
-      <h1>今天，这个产品<br>发生了什么？</h1>
-      <p>看真实访问、漏斗和订单。不用靠感觉判断市场。</p>
-    </section>
-
-    <div class="range">
-      <button data-days="1" class="active">近24小时</button>
-      <button data-days="7">近7天</button>
-      <button data-days="30">近30天</button>
-      <span id="lastUpdated" class="refresh" style="align-self:center;margin-left:auto"></span>
-    </div>
-
-    <section class="metrics">
-      <div class="metric"><span>访问人数</span><strong id="mViews">0</strong><small>唯一访问会话</small></div>
-      <div class="metric"><span>开始体验</span><strong id="mStarts">0</strong><small id="mStartRate">0% / 访问</small></div>
-      <div class="metric"><span>到付款页</span><strong id="mPay">0</strong><small id="mPayRate">0% / 访问</small></div>
-      <div class="metric"><span>提交订单</span><strong id="mOrders">0</strong><small id="mOrderRate">0% / 访问</small></div>
-    </section>
-
-    <section class="section card">
-      <div class="section-head"><h2>转化漏斗</h2><span>按唯一会话计</span></div>
-      <div id="funnel" class="funnel"></div>
-    </section>
-
-    <section class="section card">
-      <div class="section-head"><h2>渠道来源</h2><span>先看成交质量，再看流量大小</span></div>
-      <div class="source-list">
-        <div class="source header"><div>来源</div><div>访问</div><div>付款页</div><div>下单</div></div>
-        <div id="sources"></div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-head"><h2>最近订单</h2><span>最新 10 笔</span></div>
-      <div id="orders" class="orders"></div>
-    </section>
-
-    <div class="foot">数据来自 Supabase analytics_events 与 orders。访问统计从埋点上线后开始累计。</div>
-  </main>
-</div>
-
-<script>
-(function(){
-  var SUPABASE_URL='https://fhvhnibznphatfnbvvnb.supabase.co';
-  var ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZodmhuaWJ6bnBoYXRmbmJ2dm5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3MzMzNDgsImV4cCI6MjEwNTMwOTM0OH0.OSuLOzcuMLmPnZ17EMaz6lXrOY4CGgBJWMV96HHg1LU';
-  var ADMIN_EMAIL='day1garden58@gmail.com';
-  var currentDays=1;
-  var session=JSON.parse(localStorage.getItem('dayi_admin_session')||'null');
-  var $=function(id){return document.getElementById(id)};
-
-  function baseHeaders(token,extra){
-    var h={'apikey':ANON_KEY,'Authorization':'Bearer '+(token||ANON_KEY)};
-    if(extra) Object.keys(extra).forEach(function(k){h[k]=extra[k]});
-    return h;
-  }
-  function saveSession(s){session=s;localStorage.setItem('dayi_admin_session',JSON.stringify(s))}
-  function clearSession(){session=null;localStorage.removeItem('dayi_admin_session')}
-  async function passwordLogin(email,password){
-    var r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{
-      method:'POST',headers:baseHeaders(null,{'Content-Type':'application/json'}),
-      body:JSON.stringify({email:email,password:password})
-    });
-    var x=await r.json();
-    if(!r.ok) throw new Error(x.error_description||x.msg||x.message||'登录失败');
-    saveSession(x); return x;
-  }
-  async function refreshSession(){
-    if(!session||!session.refresh_token) return false;
-    var r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token',{
-      method:'POST',headers:baseHeaders(null,{'Content-Type':'application/json'}),
-      body:JSON.stringify({refresh_token:session.refresh_token})
-    });
-    if(!r.ok){clearSession();return false}
-    saveSession(await r.json()); return true;
-  }
-  async function authFetch(url,opts){
-    opts=opts||{};
-    opts.headers=Object.assign({},baseHeaders(session&&session.access_token),opts.headers||{});
-    var r=await fetch(url,opts);
-    if(r.status===401 && await refreshSession()){
-      opts.headers=Object.assign({},baseHeaders(session.access_token),opts.headers||{});
-      r=await fetch(url,opts);
-    }
-    return r;
-  }
-  async function rpc(name,args){
-    var r=await authFetch(SUPABASE_URL+'/rest/v1/rpc/'+name,{
-      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(args||{})
-    });
-    if(!r.ok) throw new Error(await r.text());
-    return r.json();
-  }
-  function eventMap(rows){
-    var o={};(rows||[]).forEach(function(x){o[x.event_name]=Number(x.unique_sessions||0)});return o;
-  }
-  function pct(a,b){return b?Math.round(a/b*100)+'%':'0%'}
-  function sourceLabel(s){
-    return ({
-      wechat_video:'视频号',wechat_moments:'朋友圈',old_clients:'老客户 / 私聊',
-      xiaohongshu:'小红书',direct:'直接访问'
-    })[s]||s||'未知';
-  }
-  function paymentLabel(s){
-    return ({pending_verification:'待核验',verified:'已验证',paid:'已付款',confirmed:'已确认'})[s]||s||'—';
-  }
-  function processLabel(s){
-    return ({waiting_payment_verification:'待付款确认',queued:'排队中',pending_generation:'待生成',generating:'生成中',completed:'已完成',failed:'失败'})[s]||s||'—';
-  }
-  function fmtTime(s){
-    if(!s)return '';
-    try{return new Date(s).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}catch(e){return s}
-  }
-
-  function safeId(s){return String(s||'').replace(/[^a-zA-Z0-9_-]/g,'_')}
-  function publicResultUrl(path){
-    if(!path)return '';
-    if(/^https?:/i.test(path))return path;
-    return SUPABASE_URL+'/storage/v1/object/public/order-results/'+String(path).split('/').map(encodeURIComponent).join('/');
-  }
-  async function loadPrivateOrderImage(path,imgId,placeholderId){
-    if(!path)return;
-    try{
-      var url=SUPABASE_URL+'/storage/v1/object/authenticated/order-photos/'+String(path).split('/').map(encodeURIComponent).join('/');
-      var r=await authFetch(url,{headers:{'Accept':'image/*'}});
-      if(!r.ok) throw new Error('image '+r.status);
-      var blob=await r.blob();
-      var img=$(imgId), ph=$(placeholderId);
-      if(img){img.src=URL.createObjectURL(blob);img.classList.remove('hidden')}
-      if(ph)ph.classList.add('hidden');
-    }catch(e){
-      var ph=$(placeholderId);
-      if(ph)ph.textContent='图片读取失败，请刷新后重试。';
-    }
-  }
-  function orderDetailHtml(o){
-    var id=safeId(o.order_code);
-    var needs=Array.isArray(o.needs)?o.needs:[];
-    var prompt=o.prompt||'这笔订单尚未进入生成阶段。付款确认后才会生成专业提示词。';
-    var advice=Array.isArray(o.advice_json)?o.advice_json:[];
-    var resultA=publicResultUrl(o.result_a_path);
-    var resultB=publicResultUrl(o.result_b_path);
-    var amount=(o.amount_cny===null||o.amount_cny===undefined)?'测试单':'¥'+Number(o.amount_cny).toFixed(1);
-
-    var originalPhoto=o.photo_path
-      ? '<img id="yard_'+id+'" class="detail-img hidden" alt="庭院现场原图"><div id="yard_ph_'+id+'" class="img-placeholder">正在读取庭院现场原图…</div>'
-      : '<div class="img-placeholder">没有庭院现场照片</div>';
-    var paymentPhoto=o.payment_proof_path
-      ? '<img id="pay_'+id+'" class="detail-img hidden" alt="付款截图"><div id="pay_ph_'+id+'" class="img-placeholder">正在读取付款截图…</div>'
-      : '<div class="img-placeholder">这笔旧测试单没有付款截图</div>';
-
-    var results='';
-    if(resultA||resultB){
-      results='<div class="result-grid">'+
-        (resultA?'<div><div class="detail-title">反馈图 A</div><img class="detail-img" src="'+esc(resultA)+'" alt="反馈效果图 A"></div>':'')+
-        (resultB?'<div><div class="detail-title">反馈图 B</div><img class="detail-img" src="'+esc(resultB)+'" alt="反馈效果图 B"></div>':'')+
-        '</div>';
-    }else{
-      results='<div class="img-placeholder">尚未生成反馈效果图</div>';
-    }
-
-    var adviceHtml=advice.length
-      ? advice.slice(0,3).map(function(x,i){return '<div class="detail-text"><b>0'+(i+1)+'</b>｜'+esc(String(x))+'</div>'}).join('')
-      : '<div class="detail-text" style="color:var(--muted)">暂无设计建议。</div>';
-
-    return '<div class="order">'+
-      '<div class="order-top"><div class="order-code">'+esc(o.order_code||'未编号')+'</div><div class="amount">'+amount+'</div></div>'+
-      '<div class="order-meta"><span>'+fmtTime(o.created_at)+'</span><span class="badge">'+esc(paymentLabel(o.payment_status))+'</span><span class="badge">'+esc(processLabel(o.process_status))+'</span><span>'+esc(o.contact||'')+'</span></div>'+
-      '<details data-order="'+esc(o.order_code||'')+'"><summary>查看完整订单详情</summary>'+
-        '<div class="detail-grid">'+
-          '<div class="detail-block"><div class="detail-title">庭院现场原图</div>'+originalPhoto+'</div>'+
-          '<div class="detail-block"><div class="detail-title">付款截图</div>'+paymentPhoto+'</div>'+
-          '<div class="detail-block full"><div class="detail-title">客户需求单</div>'+
-            '<div class="detail-text"><b>联系方式：</b>'+esc(o.contact||'—')+'\n<b>面积：</b>'+esc(o.yard_size||'—')+'\n<b>风格：</b>'+esc(o.style||'—')+'\n<b>特别备注：</b>'+esc(o.notes||'—')+'</div>'+
-            '<div class="detail-title" style="margin-top:12px">核心需求</div><div class="need-tags">'+(needs.length?needs.map(function(n){return '<span>'+esc(n)+'</span>'}).join(''):'<span>未填写</span>')+'</div>'+
-          '</div>'+
-          '<div class="detail-block full"><div class="detail-title">生成提示词</div><div class="prompt-box">'+esc(prompt)+'</div></div>'+
-          '<div class="detail-block full"><div class="detail-title">反馈效果图</div>'+results+'</div>'+
-          '<div class="detail-block full"><div class="detail-title">3 条设计建议</div>'+adviceHtml+'</div>'+
-        '</div>'+
-        '<div class="order-actions">'+
-          ((o.payment_status==='pending_verification'||o.process_status==='waiting_payment_verification')
-            ? '<button class="action-primary" data-confirm-generate="'+esc(o.order_code||'')+'">确认付款并生成</button>'
-            : (o.process_status==='failed'||o.process_status==='pending_generation'||o.process_status==='queued')
-              ? '<button class="action-secondary" data-retry-generate="'+esc(o.order_code||'')+'">重新尝试生成</button>'
-              : '')+
-        '</div>'+
-        '<div id="action_note_'+id+'" class="action-note">'+
-          ((o.payment_status==='pending_verification'||o.process_status==='waiting_payment_verification')
-            ? '核对付款截图无误后再点击。'
-            : '')+
-        '</div>'+
-      '</details>'+
-    '</div>';
-  }
-  async function confirmAndGenerate(orderCode,btn){
-    if(!window.confirm('确认这笔款项已经收到，并让订单进入生成流程吗？')) return;
-    var old=btn.textContent; btn.disabled=true; btn.textContent='正在确认…';
-    var note=$('action_note_'+safeId(orderCode));
-    try{
-      var r=await authFetch(SUPABASE_URL+'/rest/v1/rpc/admin_confirm_direction_feedback_order',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({p_order_code:orderCode})
-      });
-      if(!r.ok) throw new Error('付款确认失败：'+await r.text());
-      btn.textContent='正在启动生成…';
-
-      var g=await authFetch(SUPABASE_URL+'/functions/v1/generate-direction-feedback',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({order_code:orderCode})
-      });
-      var x={}; try{x=await g.json()}catch(e){}
-      if(!g.ok) throw new Error(x.message||x.error||'生成流程启动失败');
-
-      if(x.configured===false){
-        if(note) note.textContent='付款已确认，提示词已生成，订单已进入待生成。当前还差生图模型 API 接入，所以暂时不会自动出图。';
-        btn.textContent='已确认，等待生图 API';
-      }else{
-        if(note) note.textContent='已确认付款，后台生成流程已启动。';
-        btn.textContent='生成已启动';
-      }
-      await loadOrders();
-    }catch(e){
-      if(note) note.textContent=e.message||String(e);
-      btn.disabled=false; btn.textContent=old;
-    }
-  }
-  async function retryGenerate(orderCode,btn){
-    var old=btn.textContent; btn.disabled=true;btn.textContent='正在重试…';
-    var note=$('action_note_'+safeId(orderCode));
-    try{
-      var g=await authFetch(SUPABASE_URL+'/functions/v1/generate-direction-feedback',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({order_code:orderCode})
-      });
-      var x={}; try{x=await g.json()}catch(e){}
-      if(!g.ok) throw new Error(x.message||x.error||'重试失败');
-      if(note) note.textContent=x.configured===false
-        ? '提示词已准备好，但自动生图模型还没有完成 API 接入。'
-        : '生成流程已重新启动。';
-      await loadOrders();
-    }catch(e){
-      if(note) note.textContent=e.message||String(e);
-      btn.disabled=false;btn.textContent=old;
-    }
-  }
-
-  async function loadOrders(){
-    var fields='order_code,created_at,amount_cny,payment_status,process_status,contact,yard_size,needs,style,notes,photo_path,payment_proof_path,prompt,result_a_path,result_b_path,advice_json';
-    var q='?select='+fields+'&order=created_at.desc&limit=10';
-    var r=await authFetch(SUPABASE_URL+'/rest/v1/orders'+q,{headers:{'Accept':'application/json'}});
-    if(!r.ok) throw new Error(await r.text());
-    var rows=await r.json();
-    $('orders').innerHTML=rows.length?rows.map(orderDetailHtml).join(''):'<div class="empty">还没有订单。</div>';
-
-    document.querySelectorAll('#orders details').forEach(function(d){
-      d.addEventListener('toggle',function(){
-        if(!d.open||d.dataset.imagesLoaded==='1')return;
-        d.dataset.imagesLoaded='1';
-        var code=d.getAttribute('data-order');
-        var row=rows.find(function(x){return x.order_code===code});
-        if(!row)return;
-        var id=safeId(code);
-        if(row.photo_path)loadPrivateOrderImage(row.photo_path,'yard_'+id,'yard_ph_'+id);
-        if(row.payment_proof_path)loadPrivateOrderImage(row.payment_proof_path,'pay_'+id,'pay_ph_'+id);
-      });
-    });
-
-    document.querySelectorAll('[data-confirm-generate]').forEach(function(btn){
-      btn.addEventListener('click',function(){confirmAndGenerate(btn.getAttribute('data-confirm-generate'),btn)});
-    });
-    document.querySelectorAll('[data-retry-generate]').forEach(function(btn){
-      btn.addEventListener('click',function(){retryGenerate(btn.getAttribute('data-retry-generate'),btn)});
-    });
-  }
-
-  async function loadData(){
-    try{
-      var results=await Promise.all([
-        rpc('get_direction_feedback_funnel',{p_days:currentDays}),
-        rpc('get_direction_feedback_sources',{p_days:currentDays}),
-        loadOrders()
-      ]);
-      var funnelRows=results[0]||[], sourceRows=results[1]||[];
-      var e=eventMap(funnelRows);
-      var views=e.page_view||0, starts=e.start_click||0, pay=e.payment_page_view||0, orders=e.order_submitted||0;
-      $('mViews').textContent=views;$('mStarts').textContent=starts;$('mPay').textContent=pay;$('mOrders').textContent=orders;
-      $('mStartRate').textContent=pct(starts,views)+' / 访问';
-      $('mPayRate').textContent=pct(pay,views)+' / 访问';
-      $('mOrderRate').textContent=pct(orders,views)+' / 访问';
-
-      var steps=[
-        ['访问',views],['开始体验',starts],['上传照片',e.photo_uploaded||0],
-        ['完成需求',e.needs_completed||0],['查看报价',e.offer_view||0],
-        ['到付款页',pay],['提交订单',orders]
-      ];
-      var max=Math.max(views,1);
-      $('funnel').innerHTML=steps.map(function(x){
-        var w=Math.max(2,Math.round(x[1]/max*100));
-        return '<div class="funnel-row"><div class="funnel-name">'+x[0]+'</div><div class="bar"><i style="width:'+w+'%"></i></div><div class="funnel-value">'+x[1]+'</div></div>';
-      }).join('');
-
-      $('sources').innerHTML=sourceRows.length?sourceRows.map(function(s){
-        return '<div class="source"><div>'+esc(sourceLabel(s.source))+'</div><div>'+Number(s.page_views||0)+'</div><div>'+Number(s.payment_page_views||0)+'</div><div>'+Number(s.orders_submitted||0)+'</div></div>';
-      }).join(''):'<div class="empty">还没有渠道数据。</div>';
-
-      $('lastUpdated').textContent='更新 '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
-    }catch(err){
-      if(String(err).indexOf('JWT')>=0 || String(err).indexOf('401')>=0){showLogin('登录已过期，请重新登录。')}
-      else $('lastUpdated').textContent='读取失败';
-    }
-  }
-  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
-  function showDash(){
-    $('loginView').classList.add('hidden');$('dashboard').classList.remove('hidden');$('logoutBtn').classList.remove('hidden');
-    $('adminEmail').textContent=ADMIN_EMAIL; loadData();
-  }
-  function showLogin(msg){
-    $('dashboard').classList.add('hidden');$('loginView').classList.remove('hidden');$('logoutBtn').classList.add('hidden');
-    $('adminEmail').textContent=''; if(msg)$('loginError').textContent=msg;
-  }
-
-  $('loginBtn').onclick=async function(){
-    var btn=this; $('loginError').textContent=''; btn.disabled=true;btn.textContent='正在登录…';
-    try{
-      var email=$('email').value.trim(), password=$('password').value;
-      if(email!==ADMIN_EMAIL) throw new Error('这个仪表盘只允许大一造园管理员账号登录。');
-      await passwordLogin(email,password); $('password').value=''; showDash();
-    }catch(e){$('loginError').textContent=e.message||String(e)}
-    btn.disabled=false;btn.textContent='登录仪表盘';
-  };
-  $('password').addEventListener('keydown',function(e){if(e.key==='Enter')$('loginBtn').click()});
-  $('logoutBtn').onclick=function(){clearSession();showLogin('已退出登录。')};
-  document.querySelectorAll('.range button').forEach(function(btn){
-    btn.onclick=function(){
-      document.querySelectorAll('.range button').forEach(function(b){b.classList.remove('active')});
-      btn.classList.add('active');currentDays=Number(btn.getAttribute('data-days'));loadData();
-    }
-  });
-
-  (async function(){
-    if(session&&session.access_token){
-      var r=await authFetch(SUPABASE_URL+'/auth/v1/user',{headers:{'Accept':'application/json'}});
-      if(r.ok){var u=await r.json();if(u.email===ADMIN_EMAIL){showDash();return}}
-      clearSession();
-    }
-    showLogin();
-  })();
-})();
-</script>
-</body>
-</html>
+.brand-master{width:216px;height:auto;mix-blend-mode:multiply}.settings{margin:24px 0}.settings summary{cursor:pointer;font-size:18px}.settings label{margin:16px 0 6px}.settings input,.settings select,.settings textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);font:inherit}.settings input[type=checkbox]{width:auto}.settings .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}.settings p,.sub{font-size:13px;line-height:1.8;color:var(--muted)}.settings textarea{min-height:80px}.feedback{position:sticky;top:8px;padding:12px 16px;background:var(--paper);border:1px solid var(--red);z-index:3;font-size:14px;line-height:1.7}.feedback:empty{display:none}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--red);outline-offset:3px}button{touch-action:manipulation}select{font:inherit;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px}.order-code{overflow-wrap:anywhere}.order-top{align-items:flex-start}.order{background:var(--paper)}.order ul{font-size:14px;line-height:1.9;padding-left:22px}.quality{border-left:2px solid var(--ink);padding:8px 12px;font-size:13px;line-height:1.8;margin:12px 0}.test-types{font-size:13px;line-height:1.8}button:disabled{cursor:wait;opacity:.55}@media(max-width:580px){.brand-master{width:170px}.settings .row{grid-template-columns:1fr}.top-actions{gap:0}.topbar{height:66px}.hero{padding-top:28px}.card{padding:18px}.order-top{flex-wrap:wrap}}
+dialog{width:min(780px,94vw);max-height:90vh;overflow:auto;border:1px solid var(--line);border-radius:20px;padding:24px;background:var(--paper)}dialog::backdrop{background:#2227}textarea{width:100%;min-height:90px;padding:12px;font:inherit;border:1px solid var(--line);border-radius:12px;background:var(--paper);resize:vertical}#deliveryMessage{color:#a33;line-height:1.7}#deliveryPreview{max-height:260px}.dialog-top{display:flex;justify-content:space-between;align-items:center}button:focus-visible,textarea:focus-visible{outline:2px solid var(--red);outline-offset:3px}</style></head><body><div class="wrap">
+<header class="topbar"><img class="brand-master" src="../assets/dayi-master-v1.6.png" alt="dayi 大一造园"><div class="top-actions"><a class="linkbtn" href="../">客户首页</a><button class="linkbtn hidden" id="logout">退出</button></div></header>
+<div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+<section id="login" class="card login"><h2>收银与反馈</h2><p class="sub">查看客户需求、核对到账、交付方向反馈。</p><form id="loginForm"><div class="field"><label for="email">邮箱</label><input id="email" type="email" value="day1garden58@gmail.com" autocomplete="username" required></div><div class="field"><label for="password">密码</label><input id="password" type="password" autocomplete="current-password" required></div><button class="btn" id="loginButton">登录业务后台</button></form></section>
+<main id="workspace" class="hidden"><div class="hero"><div class="eyebrow">DAYI / FEEDBACK</div><h1>方案即时反馈后台</h1><p id="serviceStatus">正在读取交付状态…</p></div>
+<section id="deliverySuccess" class="card hidden" aria-live="polite"><h2>本次反馈已交付</h2><p id="deliverySuccessOrder"></p><a id="deliverySuccessLink" class="btn" target="_blank" rel="noopener noreferrer">查看这笔订单的客户结果</a><p class="sub">打开后请核对订单号、效果图与3条建议。你自己查看也会计入展示记录。</p></section><div class="range" id="ranges"><button data-days="1">近24小时</button><button data-days="7" class="active">近7天</button><button data-days="30">近30天</button><button data-days="3650">全部</button></div>
+<div class="metrics"><div class="metric"><span>待核对到账</span><strong id="pending">—</strong><small>以实际到账为准</small></div><div class="metric"><span>已提交订单</span><strong id="submitted">—</strong><small>排除后台测试</small></div><div class="metric"><span>完整交付</span><strong id="completed">—</strong><small>图片与3条建议已保存</small></div><div class="metric"><span>确认到账</span><strong id="revenue">—</strong><small id="paidCount">仅统计已确认款项</small></div></div>
+<p class="sub" id="funnel"></p><section class="section"><div class="section-head"><h2>订单与交付</h2><button class="linkbtn" id="refresh">刷新</button></div><div class="range" id="filters"><button data-filter="all" class="active">全部已提交</button><button data-filter="pending">待确认到账</button><button data-filter="processing">待交付</button><button data-filter="completed">已交付</button><button data-filter="failed">需要跟进</button><button data-filter="drafts">未提交草稿</button></div><p class="sub">核对银行或收款平台的实际到账记录后，再点击确认。付款截图用于匹配订单，不能代替到账记录。</p><p class="sub" id="orderListSummary" role="status"></p><div id="orders" class="orders"></div><button class="linkbtn hidden" id="more">加载更多</button></section>
+<p class="foot">大一造园 · 庭院改造方向反馈｜订单、到账与反馈记录持续保存。</p></main></div>
+<dialog id="deliveryDialog"><div class="dialog-top"><h2>上传效果图并交付反馈</h2><button id="closeDelivery" class="linkbtn" type="button">关闭</button></div><p class="sub" id="deliveryOrder"></p><p class="sub">对照原院核对方向图与建议，提交后客户可在原订单页查看。</p><div class="detail-grid"><img class="detail-img" id="deliveryOriginal" alt="客户原院照片"><img class="detail-img" id="deliveryPreview" alt="待交付方向图" hidden></div><form id="deliveryForm"><div class="field"><label for="deliveryImage">上传效果图（JPG、PNG 或 WebP，6MB以内）</label><input id="deliveryImage" type="file" accept="image/jpeg,image/png,image/webp" required></div><label for="advice1">设计建议 1</label><textarea id="advice1" minlength="3" maxlength="1200" required></textarea><label for="advice2">设计建议 2</label><textarea id="advice2" minlength="3" maxlength="1200" required></textarea><label for="advice3">设计建议 3</label><textarea id="advice3" minlength="3" maxlength="1200" required></textarea><p id="deliveryMessage" role="status"></p><button class="btn" id="publishDelivery">已核对，交付给客户</button></form></dialog><script type="module" src="./admin.mjs?v=20260921-result-closure"></script></body></html>

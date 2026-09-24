@@ -1,0 +1,3 @@
+export const SUPABASE_URL='https://fhvhnibznphatfnbvvnb.supabase.co';
+export const PUBLIC_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZodmhuaWJ6bnBoYXRmbmJ2dm5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3MzMzNDgsImV4cCI6MjEwNTMwOTM0OH0.OSuLOzcuMLmPnZ17EMaz6lXrOY4CGgBJWMV96HHg1LU';
+export const API_URL=SUPABASE_URL+'/functions/v1/direction-feedback-api';

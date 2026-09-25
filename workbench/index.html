@@ -248,6 +248,7 @@ const ROUTER_URL=SUPABASE_URL+'/functions/v1/workbench-router-api';
 const ASSET_URL=SUPABASE_URL+'/functions/v1/day1-asset-api';
 const DASH_URL=SUPABASE_URL+'/functions/v1/day1-dashboard-api';
 const CRM_URL=SUPABASE_URL+'/functions/v1/day1-crm-api';
+const BUSINESS_URL=SUPABASE_URL+'/functions/v1/day1-business-api';
 const sb=supabase.createClient(SUPABASE_URL,PUBLIC_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const q=s=>document.querySelector(s),qa=s=>Array.from(document.querySelectorAll(s));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -315,6 +316,16 @@ q('#askBtn').onclick=async()=>{
   const text=q('#prompt').value.trim();if(!text)return;q('#askBtn').disabled=true;q('#result').innerHTML='';q('#jevStatus').textContent='DAY1 · 正在判断';
   try{
     const routed=await api(ROUTER_URL,{text});
+    if(routed.route==='business'){
+      q('#jevStatus').textContent='DAY1 · 正在读取经营数据';
+      const b=await api(BUSINESS_URL,{text});
+      const stats=b.stats||{}, actions=b.actions||[];
+      const actionHtml=actions.map(a=>'<div class="asset"><div class="asset-head"><div><div class="asset-title">'+esc(a.priority+'｜'+a.title)+'</div><div class="asset-body">'+esc(a.action)+'</div></div><span class="badge">经营</span></div><div class="asset-body">为什么：'+esc(a.why||'')+'</div></div>').join('');
+      q('#result').innerHTML='<div class="result"><b>'+esc(b.headline||'经营建议')+'</b><p>CRM '+esc(stats.total??0)+' 人 · 在谈 '+esc(stats.active??0)+' 人 · 逾期跟进 '+esc(stats.overdue??0)+' 人 · 在谈金额 '+cny(stats.pipeline_value_cny||0)+'</p></div>'+actionHtml+'<div class="status">'+esc(b.focus||'')+'</div>';
+      q('#jevStatus').textContent='DAY1 · 经营建议已生成';
+      await loadDashboard();
+      return
+    }
     if(routed.route!=='decision'){q('#result').innerHTML='<div class="result"><b>已路由：'+esc(routed.label)+'</b><p>任务已进入 '+esc(routed.label)+' 模块。任务 ID：'+esc(routed.task?.id||'—')+'</p></div>';q('#jevStatus').textContent='DAY1 · 已分流';await loadDashboard();return}
     q('#jevStatus').textContent='DAY1 · 正在读取相关资产';
     let contextAssets=[];try{const cx=await assetCall({action:'context',query:text,limit:6});contextAssets=cx.assets||[]}catch{}

@@ -27,14 +27,6 @@ button{cursor:pointer}
   background:rgba(248,246,243,.93);backdrop-filter:blur(14px);
   -webkit-backdrop-filter:blur(14px);position:sticky;top:0;z-index:20
 }
-.brand-lockup{display:flex;align-items:center;gap:14px}
-.brand-word{font-family:Georgia,"Times New Roman",serif;font-size:28px;line-height:1;letter-spacing:.015em;color:var(--ink)}
-.brand-one{position:relative;display:inline-block}
-.brand-one:after{
-  content:"";position:absolute;width:6px;height:6px;border-radius:50%;
-  background:var(--red);left:50%;transform:translateX(-50%);top:-5px
-}
-.brand-cn{font-size:12px;letter-spacing:.17em;color:#4d4945}
 .top-note{font-size:10px;letter-spacing:.18em;color:#99918a}
 .progress-track{position:fixed;top:74px;left:0;right:0;height:2px;z-index:21;background:transparent}
 .progress{height:2px;background:var(--red);width:0;transition:width .32s ease}
@@ -132,7 +124,7 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
 .hidden{display:none!important}
 @media(max-width:720px){
   .topbar{height:66px;padding:0 18px}.progress-track{top:66px}
-  .brand-word{font-size:25px}.brand-cn{font-size:11px}.top-note{display:none}
+  .top-note{display:none}
   .stage{padding:22px 18px 34px}
   .step{min-height:calc(100vh - 122px);align-items:flex-start;padding-top:34px}
   .options{grid-template-columns:1fr}
@@ -142,14 +134,12 @@ textarea:focus,input[type=text]:focus{border-color:#8e857d}
   .upsell{grid-template-columns:1fr}
 }
 </style>
+<script src="/dayi-garden/brand/dayi-brand.js"></script>
 </head>
 <body>
 <div class="shell">
   <header class="topbar">
-    <div class="brand-lockup">
-      <div class="brand-word">day<span class="brand-one">1</span></div>
-      <div class="brand-cn">大一造园</div>
-    </div>
+    <dayi-brand cn></dayi-brand>
     <div class="top-note">NATURAL / MINIMAL / LASTING</div>
   </header>
   <div class="progress-track"><div id="progress" class="progress"></div></div>

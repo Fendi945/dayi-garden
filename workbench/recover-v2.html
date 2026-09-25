@@ -9,7 +9,7 @@
 :root{--bg:#F8F6F3;--paper:#FCFBF8;--ink:#222;--muted:#8B867E;--line:#DDD7CD;--red:#C6402F}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",Arial,sans-serif}
 .wrap{max-width:520px;margin:auto;padding:calc(28px + env(safe-area-inset-top)) 18px 48px}
-.brand{font-family:Georgia,"Times New Roman",serif;font-size:30px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);vertical-align:top;margin:2px 0 0 2px}.sub{font-size:10px;letter-spacing:.18em;color:var(--muted);margin-top:8px}
+.sub{font-size:10px;letter-spacing:.18em;color:var(--muted);margin-top:8px}
 .hero{margin:46px 0 20px}.hero h1{font-size:30px;font-weight:500;margin:0 0 10px}.hero p{font-size:13px;line-height:1.7;color:var(--muted)}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
 label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}input{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:16px}
@@ -17,9 +17,10 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}input{wi
 .msg{font-size:12px;line-height:1.65;margin-top:14px;color:var(--muted)}.ok{color:#2f6d45}.err{color:#9f2f28}.hidden{display:none}
 .back{display:block;text-align:center;margin-top:14px;font-size:11px;color:var(--muted);text-decoration:none}
 </style>
+<script src="/dayi-garden/brand/dayi-brand.js"></script>
 </head>
 <body><div class="wrap">
-<div class="brand">day1<span class="dot"></span></div><div class="sub">DAY1 · 元点</div>
+<dayi-brand></dayi-brand><div class="sub">DAY1 · 元点</div>
 <div class="hero"><h1>找回密码</h1><p>只使用这里刚刚发送的最新一封邮件。旧的重置邮件全部不要再点。</p></div>
 
 <div id="sendCard" class="card">

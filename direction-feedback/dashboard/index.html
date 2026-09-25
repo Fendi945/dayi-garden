@@ -80,6 +80,8 @@ input:focus{border-color:#999}
 .detail-img{display:block;width:100%;max-height:420px;object-fit:contain;background:#f2eee9;border:1px solid var(--line);border-radius:12px}
 .img-placeholder{min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:12px;background:#f2eee9;border-radius:12px;padding:16px}
 .prompt-box{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;background:#f5f1eb;border-radius:10px;padding:12px;max-height:360px;overflow:auto}
+.prompt-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.prompt-status{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
+.delivery-panel{display:grid;gap:12px}.delivery-panel textarea{width:100%;min-height:78px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;resize:vertical;font:13px/1.6 inherit;outline:none}.delivery-panel textarea:focus{border-color:#999}.delivery-file{display:block;width:100%;padding:12px;border:1px dashed var(--line);border-radius:12px;background:#fff}.delivery-preview{display:none;width:100%;max-height:420px;object-fit:contain;border:1px solid var(--line);border-radius:12px;background:#f2eee9}.delivery-meta{font-size:11px;color:var(--muted);line-height:1.65}.delivery-actions{display:flex;gap:10px;flex-wrap:wrap}.copy-ok{color:var(--ok)}
 .need-tags{display:flex;flex-wrap:wrap;gap:7px}
 .need-tags span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:5px 9px;background:#fff}
 .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -304,9 +306,27 @@ input:focus{border-color:#999}
             '<div class="detail-text"><b>联系方式：</b>'+esc(o.contact||'—')+'\n<b>面积：</b>'+esc(o.yard_size||'—')+'\n<b>风格：</b>'+esc(o.style||'—')+'\n<b>特别备注：</b>'+esc(o.notes||'—')+'</div>'+
             '<div class="detail-title" style="margin-top:12px">核心需求</div><div class="need-tags">'+(needs.length?needs.map(function(n){return '<span>'+esc(n)+'</span>'}).join(''):'<span>未填写</span>')+'</div>'+
           '</div>'+
-          '<div class="detail-block full"><div class="detail-title">生成提示词</div><div class="prompt-box">'+esc(prompt)+'</div></div>'+
-          '<div class="detail-block full"><div class="detail-title">反馈效果图</div>'+results+'</div>'+
-          '<div class="detail-block full"><div class="detail-title">3 条设计建议</div>'+adviceHtml+'</div>'+
+          '<div class="detail-block full"><div class="detail-title">提示词工作区</div>'+
+            '<div id="prompt_'+id+'" class="prompt-box">'+esc(prompt)+'</div>'+
+            '<div class="prompt-toolbar">'+
+              '<button class="action-secondary" data-load-prompt="'+esc(o.order_code||'')+'">刷新提示词</button>'+
+              '<button class="action-secondary" data-copy-prompt="'+esc(o.order_code||'')+'">复制提示词</button>'+
+            '</div>'+
+            '<div id="prompt_status_'+id+'" class="prompt-status">订单已保存提示词时显示正式版本；未进入生成时会读取后台草稿。</div>'+
+          '</div>'+
+          '<div class="detail-block full"><div class="detail-title">当前反馈效果图</div>'+results+'</div>'+
+          '<div class="detail-block full"><div class="detail-title">当前 3 条设计建议</div>'+adviceHtml+'</div>'+
+          '<div class="detail-block full"><div class="detail-title">人工交付｜发送反馈图给客户</div>'+
+            '<div class="delivery-panel">'+
+              '<input id="delivery_file_'+id+'" class="delivery-file" type="file" accept="image/jpeg,image/png,image/webp">'+
+              '<img id="delivery_preview_'+id+'" class="delivery-preview" alt="待发送反馈图预览">'+
+              '<textarea id="advice1_'+id+'" placeholder="建议 01">'+esc(advice[0]||'')+'</textarea>'+
+              '<textarea id="advice2_'+id+'" placeholder="建议 02">'+esc(advice[1]||'')+'</textarea>'+
+              '<textarea id="advice3_'+id+'" placeholder="建议 03">'+esc(advice[2]||'')+'</textarea>'+
+              '<div class="delivery-actions"><button class="action-primary" data-deliver="'+esc(o.order_code||'')+'" data-updated="'+esc(o.updated_at||'')+'">发送给客户</button></div>'+
+              '<div id="delivery_status_'+id+'" class="delivery-meta">上传最终确认图，并填写 3 条建议后发送。发送后客户结果页会读取最新交付。</div>'+
+            '</div>'+
+          '</div>'+
         '</div>'+
         '<div class="order-actions">'+
           ((o.payment_status==='pending_verification'||o.process_status==='waiting_payment_verification')
@@ -378,8 +398,86 @@ input:focus{border-color:#999}
     }
   }
 
+
+  async function adminApiJson(payload){
+    var r=await authFetch(SUPABASE_URL+'/functions/v1/direction-feedback-api',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload||{})
+    });
+    var x={};try{x=await r.json()}catch(e){}
+    if(!r.ok) throw new Error(x.message||x.error||'后台操作失败');
+    return x;
+  }
+
+  async function loadAdminPrompt(orderCode,btn){
+    var id=safeId(orderCode),box=$('prompt_'+id),status=$('prompt_status_'+id);
+    var old=btn&&btn.textContent;if(btn){btn.disabled=true;btn.textContent='读取中…'}
+    try{
+      var x=await adminApiJson({action:'admin_order_prompt',order_code:orderCode});
+      if(box)box.textContent=x.prompt||'';
+      if(status)status.textContent=(x.source==='saved'?'正式提示词：':'草稿提示词：')+(x.note||'');
+    }catch(e){if(status)status.textContent=e.message||String(e)}
+    if(btn){btn.disabled=false;btn.textContent=old}
+  }
+
+  async function copyPrompt(orderCode,btn){
+    var id=safeId(orderCode),box=$('prompt_'+id),status=$('prompt_status_'+id);
+    var text=box?box.textContent:'';
+    if(!text)return;
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText) await navigator.clipboard.writeText(text);
+      else{
+        var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+        document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+      }
+      if(status){status.textContent='提示词已复制。';status.classList.add('copy-ok');setTimeout(function(){status.classList.remove('copy-ok')},1200)}
+    }catch(e){if(status)status.textContent='复制失败，请手动选择提示词复制。'}
+  }
+
+  function previewDeliveryFile(orderCode,input){
+    var id=safeId(orderCode),img=$('delivery_preview_'+id);
+    var file=input.files&&input.files[0];
+    if(!file||!img){if(img)img.style.display='none';return}
+    img.src=URL.createObjectURL(file);img.style.display='block';
+  }
+
+  async function deliverManually(orderCode,btn){
+    var id=safeId(orderCode),status=$('delivery_status_'+id),fileInput=$('delivery_file_'+id);
+    var file=fileInput&&fileInput.files&&fileInput.files[0];
+    var advice=[
+      ($('advice1_'+id)?.value||'').trim(),
+      ($('advice2_'+id)?.value||'').trim(),
+      ($('advice3_'+id)?.value||'').trim()
+    ];
+    if(!file){if(status)status.textContent='请先选择最终反馈图。';return}
+    if(advice.some(function(x){return x.length<3})){if(status)status.textContent='请把 3 条设计建议填写完整。';return}
+    if(file.size>6*1024*1024){if(status)status.textContent='反馈图请控制在 6MB 以内。';return}
+
+    var old=btn.textContent;btn.disabled=true;btn.textContent='发送中…';
+    try{
+      var form=new FormData();
+      form.append('action','admin_deliver');
+      form.append('order_code',orderCode);
+      form.append('advice',JSON.stringify(advice));
+      form.append('expected_updated_at',btn.getAttribute('data-updated')||'');
+      form.append('file',file,file.name||'feedback.jpg');
+
+      var r=await authFetch(SUPABASE_URL+'/functions/v1/direction-feedback-api',{method:'POST',body:form});
+      var x={};try{x=await r.json()}catch(e){}
+      if(!r.ok)throw new Error(x.message||x.error||'发送失败');
+
+      if(status)status.textContent='✓ 已发送给客户，并写入最新交付版本。';
+      btn.textContent='已发送';
+      await loadOrders();
+    }catch(e){
+      if(status)status.textContent=e.message||String(e);
+      btn.disabled=false;btn.textContent=old;
+    }
+  }
+
   async function loadOrders(){
-    var fields='order_code,created_at,amount_cny,payment_status,process_status,contact,yard_size,needs,style,notes,photo_path,payment_proof_path,prompt,result_a_path,result_b_path,advice_json';
+    var fields='order_code,created_at,updated_at,amount_cny,payment_status,process_status,contact,yard_size,needs,style,notes,photo_path,payment_proof_path,prompt,result_a_path,result_b_path,advice_json';
     var q='?select='+fields+'&order=created_at.desc&limit=10';
     var r=await authFetch(SUPABASE_URL+'/rest/v1/orders'+q,{headers:{'Accept':'application/json'}});
     if(!r.ok) throw new Error(await r.text());
@@ -404,6 +502,17 @@ input:focus{border-color:#999}
     });
     document.querySelectorAll('[data-retry-generate]').forEach(function(btn){
       btn.addEventListener('click',function(){retryGenerate(btn.getAttribute('data-retry-generate'),btn)});
+    });
+    document.querySelectorAll('[data-load-prompt]').forEach(function(btn){
+      btn.addEventListener('click',function(){loadAdminPrompt(btn.getAttribute('data-load-prompt'),btn)});
+    });
+    document.querySelectorAll('[data-copy-prompt]').forEach(function(btn){
+      btn.addEventListener('click',function(){copyPrompt(btn.getAttribute('data-copy-prompt'),btn)});
+    });
+    document.querySelectorAll('[data-deliver]').forEach(function(btn){
+      btn.addEventListener('click',function(){deliverManually(btn.getAttribute('data-deliver'),btn)});
+      var code=btn.getAttribute('data-deliver'), input=$('delivery_file_'+safeId(code));
+      if(input)input.addEventListener('change',function(){previewDeliveryFile(code,input)});
     });
   }
 

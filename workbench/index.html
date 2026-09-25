@@ -10,7 +10,7 @@
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",Arial,sans-serif}
 .wrap{max-width:1120px;margin:auto;padding:calc(26px + env(safe-area-inset-top)) 22px calc(72px + env(safe-area-inset-bottom))}
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}
-.logo{font-family:Georgia,"Times New Roman",serif;font-size:31px;letter-spacing:-1px;line-height:1}.iwrap{position:relative;display:inline-block}.idot{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--red);left:50%;transform:translateX(-50%);top:-2px}
+
 .sub{font-size:10px;letter-spacing:.18em;color:var(--muted);margin-top:9px}.nav{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.nav button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 12px;font-size:11px;color:var(--muted);cursor:pointer}.nav button.active{color:var(--red);border-color:var(--red)}
 .hero{margin:48px 0 24px}.hero h1{font-size:34px;font-weight:500;margin:0 0 10px;letter-spacing:.01em}.hero p{font-size:13px;color:var(--muted);line-height:1.75;margin:0;max-width:760px}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0}.card h2{font-size:14px;margin:0 0 14px;font-weight:600}
@@ -32,12 +32,13 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{bor
 @media(max-width:820px){.grid4{grid-template-columns:repeat(2,1fr)}.grid3{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.wrap{padding-left:18px;padding-right:18px}.nav{max-width:680px}}
 @media(max-width:560px){.crm-form{grid-template-columns:1fr}.crm-actions{grid-template-columns:1fr}.top{display:block}.nav{margin-top:18px;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.nav button{white-space:nowrap}.hero{margin-top:38px}.hero h1{font-size:29px}.grid4{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr}.bar{grid-template-columns:96px 1fr 38px}.kv{grid-template-columns:110px 1fr}}
 </style>
+<script src="/dayi-garden/brand/dayi-brand.js"></script>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div>
-      <div class="logo">day<span class="iwrap">ı<span class="idot"></span></span></div>
+      <dayi-brand></dayi-brand>
       <div class="sub">DAY1 · 元点</div>
     </div>
     <div id="nav" class="nav hidden">

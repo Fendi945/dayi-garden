@@ -17,7 +17,7 @@
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .metric{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:17px}.metric span{font-size:10px;color:var(--muted);display:block}.metric strong{font-family:Georgia,serif;font-size:27px;font-weight:400;display:block;margin-top:8px}.metric small{font-size:10px;color:var(--muted);line-height:1.45;display:block;margin-top:5px}
 .section{margin-top:34px}.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:10px}.section-head b{font-size:14px}.section-head b:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-right:8px;vertical-align:2px}.section-head span{font-size:10px;color:var(--muted)}
-input,textarea{width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px;font:inherit;color:var(--ink);outline:none}textarea{min-height:130px;resize:vertical;font-size:17px;line-height:1.6}
+input,textarea,select{width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px;font:inherit;color:var(--ink);outline:none}textarea{min-height:130px;resize:vertical;font-size:17px;line-height:1.6}.crm-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.crm-card{padding:15px 0;border-top:1px solid var(--line)}.crm-card:first-child{border-top:0}.crm-main{display:grid;grid-template-columns:1fr auto;gap:12px}.crm-actions{display:grid;grid-template-columns:160px 1fr auto;gap:8px;align-items:end;margin-top:10px}.crm-actions input,.crm-actions select{padding:10px;font-size:12px}.mini{font-size:10px;color:var(--muted);line-height:1.5}
 label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{border:0;border-radius:12px;background:var(--ink);color:#fff;padding:13px 16px;font-size:14px;cursor:pointer}.btn.full{width:100%;margin-top:14px}.btn:disabled{opacity:.45}.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}.redline{border-left:3px solid var(--red);padding-left:13px}
 .status{font-size:11px;color:var(--muted);margin-top:10px}.hidden{display:none!important}.note{font-size:10px;color:var(--muted);line-height:1.65}.notice{background:var(--soft);border-radius:12px;padding:12px 14px;font-size:11px;color:var(--muted);line-height:1.65}
 .result{border-left:3px solid var(--red);padding-left:14px;margin-top:18px}.result b{font-size:14px}.result p{font-size:11px;color:var(--muted);line-height:1.65}
@@ -30,7 +30,7 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{bor
 .coreblock{padding:5px 0 18px}.coreblock h3{font-size:13px;margin:0 0 10px}.coreblock li{font-size:12px;line-height:1.7;margin:4px 0}
 .good{color:var(--ok)}.partial{color:var(--red)}
 @media(max-width:820px){.grid4{grid-template-columns:repeat(2,1fr)}.grid3{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.wrap{padding-left:18px;padding-right:18px}.nav{max-width:680px}}
-@media(max-width:560px){.top{display:block}.nav{margin-top:18px;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.nav button{white-space:nowrap}.hero{margin-top:38px}.hero h1{font-size:29px}.grid4{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr}.bar{grid-template-columns:96px 1fr 38px}.kv{grid-template-columns:110px 1fr}}
+@media(max-width:560px){.crm-form{grid-template-columns:1fr}.crm-actions{grid-template-columns:1fr}.top{display:block}.nav{margin-top:18px;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.nav button{white-space:nowrap}.hero{margin-top:38px}.hero h1{font-size:29px}.grid4{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr}.bar{grid-template-columns:96px 1fr 38px}.kv{grid-template-columns:110px 1fr}}
 </style>
 </head>
 <body>
@@ -78,7 +78,7 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{bor
       <div class="hero"><h1>大一，今天只看需要你介入的部分。</h1><p>经营数据负责告诉你发生了什么；DAY1 负责筛掉噪音；真正需要判断的事情再交给你。</p></div>
 
       <div class="grid4">
-        <div class="metric"><span>已记录客户</span><strong id="mClients">—</strong><small>来自已接入订单联系方式，不等于完整 CRM</small></div>
+        <div class="metric"><span>CRM 客户</span><strong id="mClients">—</strong><small>DAY1 CRM 已建立，订单客户会自动同步</small></div>
         <div class="metric"><span>本月已记录收入</span><strong id="mMonthRevenue">—</strong><small>仅已接入并确认付款的方向反馈订单</small></div>
         <div class="metric"><span>进行中订单</span><strong id="mOpenOrders">—</strong><small>当前订单系统内尚未完成的真实订单</small></div>
         <div class="metric"><span>正式资产</span><strong id="mAssets">—</strong><small>规则、案例、洞察、决策与工作流</small></div>
@@ -117,15 +117,42 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{bor
     </section>
 
     <section id="tab-clients" class="hidden">
-      <div class="hero"><h1>客户与订单</h1><p>这一版先接真实订单数据。完整 CRM 还没建立，所以“客户数”只统计订单里的联系方式，不假装已经拥有完整客户系统。</p></div>
+      <div class="hero"><h1>客户 CRM</h1><p>客户不再等于订单。这里单独记录线索、沟通阶段、预计客单、下次跟进和最终成交/流失结果；订单仍作为付款与交付证据关联回来。</p></div>
       <div class="grid4">
-        <div class="metric"><span>已记录客户</span><strong id="cClients">—</strong></div>
-        <div class="metric"><span>订单总数</span><strong id="cOrders">—</strong></div>
-        <div class="metric"><span>进行中</span><strong id="cOpen">—</strong></div>
-        <div class="metric"><span>已完成</span><strong id="cDone">—</strong></div>
+        <div class="metric"><span>CRM 客户</span><strong id="cClients">—</strong><small>独立客户记录</small></div>
+        <div class="metric"><span>在谈金额</span><strong id="cPipeline">—</strong><small>未成交客户预计价值</small></div>
+        <div class="metric"><span>7天内需跟进</span><strong id="cFollow">—</strong><small>不含已逾期</small></div>
+        <div class="metric"><span>CRM 已成交额</span><strong id="cWon">—</strong><small>CRM 已确认成交记录</small></div>
       </div>
-      <div class="section"><div class="section-head"><b>最近订单</b><span>真实数据</span></div><div class="card"><div id="clientOrders"></div></div></div>
-      <div class="notice">下一步会建立独立 CRM：线索来源、客户阶段、预计客单、下次跟进时间、成交/流失原因。现在先不伪造这些字段。</div>
+
+      <div class="grid2 section">
+        <div class="card">
+          <h2>新增客户</h2>
+          <div class="crm-form">
+            <div><label>称呼</label><input id="crmName" placeholder="例如：云歌朗月阿姨"></div>
+            <div><label>联系方式</label><input id="crmContact" placeholder="微信 / 手机 / 邮箱"></div>
+            <div><label>来源</label><input id="crmSource" placeholder="视频号 / 转介绍 / 老客户"></div>
+            <div><label>预计客单</label><input id="crmExpected" type="number" min="0" step="1" placeholder="元"></div>
+            <div style="grid-column:1/-1"><label>下次跟进</label><input id="crmFollowAt" type="datetime-local"></div>
+          </div>
+          <button id="crmAddBtn" class="btn full">加入 CRM</button>
+          <div id="crmMsg" class="status"></div>
+        </div>
+
+        <div class="card">
+          <h2>客户管道</h2>
+          <div class="kv"><span>新线索</span><span id="pipeLead">—</span></div>
+          <div class="kv"><span>已联系</span><span id="pipeContacted">—</span></div>
+          <div class="kv"><span>有效需求</span><span id="pipeQualified">—</span></div>
+          <div class="kv"><span>已报价 / 方案中</span><span id="pipeProposal">—</span></div>
+          <div class="kv"><span>已成交</span><span id="pipeWon">—</span></div>
+          <div class="kv"><span>已流失</span><span id="pipeLost">—</span></div>
+          <div class="kv"><span>逾期未跟进</span><span id="pipeOverdue" class="partial">—</span></div>
+        </div>
+      </div>
+
+      <div class="section"><div class="section-head"><b>客户列表</b><span>可直接维护阶段与跟进时间</span></div><div class="card"><div id="crmContacts" class="status">正在读取 CRM…</div></div></div>
+      <div class="section"><div class="section-head"><b>关联订单</b><span>付款 / 交付证据</span></div><div class="card"><div id="clientOrders"></div></div></div>
     </section>
 
     <section id="tab-finance" class="hidden">
@@ -219,6 +246,7 @@ const DECISION_URL=SUPABASE_URL+'/functions/v1/workbench-decision-api';
 const ROUTER_URL=SUPABASE_URL+'/functions/v1/workbench-router-api';
 const ASSET_URL=SUPABASE_URL+'/functions/v1/day1-asset-api';
 const DASH_URL=SUPABASE_URL+'/functions/v1/day1-dashboard-api';
+const CRM_URL=SUPABASE_URL+'/functions/v1/day1-crm-api';
 const sb=supabase.createClient(SUPABASE_URL,PUBLIC_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const q=s=>document.querySelector(s),qa=s=>Array.from(document.querySelectorAll(s));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -245,7 +273,7 @@ function showApp(){q('#loginView').classList.add('hidden');q('#appView').classLi
 function openTab(name){
   ['dashboard','clients','finance','design','content','assets','tasks','core','account'].forEach(n=>q('#tab-'+n).classList.toggle('hidden',n!==name));
   qa('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
-  if(name==='assets')loadAssets();if(name==='tasks')loadTasks();if((name==='clients'||name==='finance'||name==='dashboard')&&!dashboard)loadDashboard();
+  if(name==='assets')loadAssets();if(name==='tasks')loadTasks();if(name==='clients')loadCRM();if((name==='clients'||name==='finance'||name==='dashboard')&&!dashboard)loadDashboard();
 }
 qa('[data-tab]').forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
 q('#logoutBtn').onclick=async()=>{await sb.auth.signOut();showLogin()};
@@ -314,13 +342,60 @@ async function loadDashboard(){
     const x=await api(DASH_URL,{});
     dashboard=x;const o=x.overview||{};
     q('#mClients').textContent=o.clients_recorded??0;q('#mMonthRevenue').textContent=cny(o.month_recorded_revenue_cny);q('#mOpenOrders').textContent=o.open_orders??0;q('#mAssets').textContent=o.assets??0;
-    q('#cClients').textContent=o.clients_recorded??0;q('#cOrders').textContent=o.orders_recorded??0;q('#cOpen').textContent=o.open_orders??0;q('#cDone').textContent=o.completed_orders??0;
+    q('#cClients').textContent=o.clients_recorded??0;q('#cPipeline').textContent=cny(o.crm_pipeline_value_cny);q('#cFollow').textContent=o.crm_follow_up_due_7d??0;q('#cWon').textContent=cny(o.crm_won_amount_cny);
     q('#fMonth').textContent=cny(o.month_recorded_revenue_cny);q('#fAll').textContent=cny(o.recorded_revenue_cny);q('#fPaid').textContent=o.paid_orders??0;
     q('#activeTaskCount').textContent=(o.active_tasks??0)+' 项';q('#orderCount').textContent=(o.orders_recorded??0)+' 单';q('#mAssets').textContent=o.assets??0;q('#sAsset').textContent=(o.assets??0)+' 条';
     q('#dashOrders').innerHTML=renderOrderRows(x.latest_orders,5);q('#clientOrders').innerHTML=renderOrderRows(x.latest_orders,20);q('#dashTasks').innerHTML=renderTaskRows((x.latest_tasks||[]).filter(t=>!['completed','failed','cancelled'].includes(String(t.status||'').toLowerCase())),6);
     q('#dashAsOf').textContent=x.as_of?new Date(x.as_of).toLocaleString('zh-CN'):'—';
   }catch(e){q('#dashOrders').innerHTML='<div class="status">'+esc(e.message)+'</div>';q('#dashTasks').innerHTML='<div class="status">'+esc(e.message)+'</div>'}
 }
+
+
+const STAGE_LABEL={lead:'新线索',contacted:'已联系',qualified:'有效需求',proposal:'已报价 / 方案中',won:'已成交',lost:'已流失',dormant:'暂缓'};
+async function crmCall(body){return api(CRM_URL,body)}
+function localInputValue(v){
+  if(!v)return '';
+  const d=new Date(v);if(Number.isNaN(+d))return '';
+  const z=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+  return z.toISOString().slice(0,16);
+}
+function renderCRM(items){
+  if(!items.length){q('#crmContacts').innerHTML='<div class="status">还没有客户。可以从上面新增，订单客户也会自动同步进来。</div>';return}
+  q('#crmContacts').innerHTML=items.map(c=>{
+    const name=c.display_name||c.primary_contact||'未命名客户';
+    const meta=[c.primary_contact,c.lead_source?('来源：'+c.lead_source):null,c.expected_value_cny!==null&&c.expected_value_cny!==undefined?('预计 '+cny(c.expected_value_cny)):null,c.won_amount_cny>0?('成交 '+cny(c.won_amount_cny)):null].filter(Boolean).join(' · ');
+    const follow=c.next_follow_up_at?('下次跟进：'+new Date(c.next_follow_up_at).toLocaleString('zh-CN')):'未设置下次跟进';
+    const options=Object.entries(STAGE_LABEL).map(([k,v])=>'<option value="'+k+'" '+(c.stage===k?'selected':'')+'>'+v+'</option>').join('');
+    return '<div class="crm-card"><div class="crm-main"><div><div class="asset-title">'+esc(name)+'</div><div class="asset-body">'+esc(meta)+'</div><div class="mini">'+esc(follow)+'</div></div><span class="badge">'+esc(STAGE_LABEL[c.stage]||c.stage)+'</span></div><div class="crm-actions"><div><label>阶段</label><select data-crm-stage="'+esc(c.id)+'">'+options+'</select></div><div><label>下次跟进</label><input type="datetime-local" data-crm-follow="'+esc(c.id)+'" value="'+esc(localInputValue(c.next_follow_up_at))+'"></div><button class="btn ghost" data-crm-save="'+esc(c.id)+'">保存</button></div></div>';
+  }).join('');
+  qa('[data-crm-save]').forEach(btn=>btn.onclick=async()=>{
+    const id=btn.dataset.crmSave,stage=q('[data-crm-stage="'+id+'"]').value,raw=q('[data-crm-follow="'+id+'"]').value;
+    btn.disabled=true;
+    try{
+      await crmCall({action:'update',id,patch:{stage,next_follow_up_at:raw?new Date(raw).toISOString():null}});
+      await Promise.all([loadCRM(),loadDashboard()]);
+    }catch(e){q('#crmMsg').textContent=e.message||'保存失败'}finally{btn.disabled=false}
+  });
+}
+async function loadCRM(){
+  q('#crmContacts').innerHTML='<div class="status">正在读取 CRM…</div>';
+  try{
+    const [s,l]=await Promise.all([crmCall({action:'stats'}),crmCall({action:'list',limit:200})]);
+    q('#cClients').textContent=s.total??0;q('#cPipeline').textContent=cny(s.pipeline_value_cny);q('#cFollow').textContent=s.follow_up_due_7d??0;q('#cWon').textContent=cny(s.won_amount_cny);
+    const bs=s.by_stage||{};q('#pipeLead').textContent=bs.lead??0;q('#pipeContacted').textContent=bs.contacted??0;q('#pipeQualified').textContent=bs.qualified??0;q('#pipeProposal').textContent=bs.proposal??0;q('#pipeWon').textContent=bs.won??0;q('#pipeLost').textContent=bs.lost??0;q('#pipeOverdue').textContent=s.follow_up_overdue??0;
+    renderCRM(l.contacts||[]);
+  }catch(e){q('#crmContacts').innerHTML='<div class="status">'+esc(e.message||'CRM 暂不可用')+'</div>'}
+}
+q('#crmAddBtn').onclick=async()=>{
+  const contact=q('#crmContact').value.trim();if(!contact){q('#crmMsg').textContent='先填写联系方式。';return}
+  q('#crmAddBtn').disabled=true;q('#crmMsg').textContent='正在加入 CRM…';
+  try{
+    const raw=q('#crmFollowAt').value;
+    await crmCall({action:'create',contact,contact_data:{display_name:q('#crmName').value.trim()||null,lead_source:q('#crmSource').value.trim()||'manual',expected_value_cny:q('#crmExpected').value||null,next_follow_up_at:raw?new Date(raw).toISOString():null}});
+    ['#crmName','#crmContact','#crmSource','#crmExpected','#crmFollowAt'].forEach(id=>q(id).value='');
+    q('#crmMsg').textContent='已加入 CRM。';dashboard=null;await Promise.all([loadCRM(),loadDashboard()]);
+  }catch(e){q('#crmMsg').textContent=e.message==='contact_already_exists'?'这个联系方式已经在 CRM 里。':(e.message||'新增失败')}finally{q('#crmAddBtn').disabled=false}
+};
 
 function renderCandidates(items){
   if(!items.length){q('#candidateList').innerHTML='<div class="status">暂无待沉淀候选。</div>';return}

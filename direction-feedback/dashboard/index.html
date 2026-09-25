@@ -22,7 +22,7 @@ button,input{font:inherit}
 .wordmark .i:before{content:"";position:absolute;width:6px;height:6px;border-radius:50%;background:var(--red);left:50%;transform:translateX(-50%);top:-7px}
 .brand-cn{font-size:12px;letter-spacing:.15em}
 .top-actions{display:flex;align-items:center;gap:10px}
-.linkbtn{border:0;background:none;color:var(--muted);padding:8px;font-size:13px;cursor:pointer}
+.linkbtn{border:0;background:none;color:var(--muted);padding:8px;font-size:13px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}.homebtn{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--ink);background:#fff}.homebtn:hover{border-color:var(--red);color:var(--red)}
 .hero{padding:38px 0 24px}
 .eyebrow{font-size:11px;letter-spacing:.18em;color:var(--red);font-weight:700;margin-bottom:10px}
 h1{font-family:Georgia,"Noto Serif SC","Songti SC",serif;font-size:clamp(34px,6vw,54px);font-weight:500;margin:0;line-height:1.15}
@@ -111,6 +111,7 @@ input:focus{border-color:#999}
       <div class="brand-cn">大一造园</div>
     </div>
     <div class="top-actions">
+      <a href="../../workbench/" class="linkbtn homebtn">← 返回 DAY1</a>
       <span id="adminEmail" class="refresh"></span>
       <button id="logoutBtn" class="linkbtn hidden">退出</button>
     </div>

@@ -17,10 +17,6 @@ button,input{font:inherit}
 .wrap{max-width:980px;margin:0 auto;padding:0 18px 60px}
 .topbar{height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(34,34,34,.08)}
 .brand{display:flex;align-items:center;gap:12px}
-.wordmark{font-family:Georgia,"Times New Roman",serif;font-size:27px;letter-spacing:.01em}
-.wordmark .i{position:relative;display:inline-block}
-.wordmark .i:before{content:"";position:absolute;width:6px;height:6px;border-radius:50%;background:var(--red);left:50%;transform:translateX(-50%);top:-7px}
-.brand-cn{font-size:12px;letter-spacing:.15em}
 .top-actions{display:flex;align-items:center;gap:10px}
 .linkbtn{border:0;background:none;color:var(--muted);padding:8px;font-size:13px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}.homebtn{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--ink);background:#fff}.homebtn:hover{border-color:var(--red);color:var(--red)}
 .hero{padding:38px 0 24px}
@@ -104,13 +100,13 @@ input:focus{border-color:#999}
   .source .hide-mobile{display:none}
 }
 </style>
+<script src="/dayi-garden/brand/dayi-brand.js"></script>
 </head>
 <body>
 <div class="wrap">
   <header class="topbar">
     <div class="brand">
-      <div class="wordmark">day<span class="i">i</span></div>
-      <div class="brand-cn">大一造园</div>
+      <dayi-brand cn></dayi-brand>
     </div>
     <div class="top-actions">
       <a href="../../workbench/" class="linkbtn homebtn">← 返回 DAY1</a>

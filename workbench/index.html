@@ -352,24 +352,68 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{bor
         <div class="metric"><span>正式资产</span><strong id="statAssets">—</strong></div>
       </div>
       <div class="card section">
-        <div class="section-head"><b>认知卡片专栏</b><span>把关键判断做成可视化长期资产</span></div>
+        <div class="section-head"><b>认知卡片专栏</b><span>分类导航 · 标签检索 · 状态管理 · 版本升级</span></div>
         <div class="grid2" style="margin-top:14px;align-items:start">
           <div>
             <img src="/dayi-garden/assets/cognitive-cards/001_DAY1_MARKETING_SALES_SYSTEM_CARD.svg" alt="DAY1 营销与销售系统认知卡" style="width:100%;display:block;border:1px solid var(--line);background:#fff">
           </div>
           <div>
             <h2 style="margin-top:0">001｜DAY1 营销与销售系统认知卡</h2>
-            <p class="note">核心纠偏：营销不是空军，营销是整套市场作战系统；品牌传播 / 内容 / 视频号 / 广告更像空军；销售是最靠近交易的一线地面部队。</p>
-            <div class="kv"><span>真北指标</span><span>视频号来源的有效商机价值</span></div>
-            <div class="kv"><span>关键判断</span><span>好的品牌和内容，应该让销售从“说服”变成“确认”</span></div>
-            <div class="kv"><span>版本</span><span>V1.0 · 2026-09-26</span></div>
+            <div class="kv"><span>主域</span><span>营销</span></div>
+            <div class="kv"><span>次级域</span><span>销售 / 品牌 / 内容</span></div>
+            <div class="kv"><span>功能</span><span>模型 / 框架 / 认知纠偏</span></div>
+            <div class="kv"><span>场景</span><span>工作台 / 视频号战略 / 培训讲解 / 内部统一认知</span></div>
+            <div class="kv"><span>状态</span><span>observed · principle</span></div>
+            <div class="kv"><span>一句话</span><span>营销是整套市场作战系统；品牌与内容负责远程影响，销售负责把认知与信任转成交易。</span></div>
           </div>
         </div>
       </div>
 
       <div class="grid2 section">
+        <div class="card">
+          <div class="section-head"><b>002｜认知卡片标签与分类系统</b><span>V1.0 · principle</span></div>
+          <p class="note"><b>分类用于导航，标签用于交叉检索，证据状态用于判断可信度，知识状态用于判断是否仍然有效。</b></p>
+          <div class="kv"><span>主域</span><span>认知</span></div>
+          <div class="kv"><span>次级域</span><span>经营 / 自动化</span></div>
+          <div class="kv"><span>功能</span><span>规则 / 框架 / 方法</span></div>
+          <div class="kv"><span>场景</span><span>工作台 / 内部统一认知 / 培训</span></div>
+        </div>
+        <div class="card">
+          <div class="section-head"><b>认知卡片标准字段</b><span>Taxonomy V1.0</span></div>
+          <div class="kv"><span>编号 / 版本</span><span>card_no / card_version</span></div>
+          <div class="kv"><span>分类</span><span>primary_domain / secondary_domains</span></div>
+          <div class="kv"><span>标签</span><span>function_tags / use_case_tags</span></div>
+          <div class="kv"><span>证据状态</span><span>validation_state</span></div>
+          <div class="kv"><span>知识状态</span><span>knowledge_status</span></div>
+          <div class="kv"><span>一句话判断</span><span>one_line_judgment</span></div>
+        </div>
+      </div>
+
+      <div class="card section">
+        <div class="section-head"><b>资产筛选</b><span>从“堆资产”升级为“可检索资产”</span></div>
+        <div class="grid4">
+          <select id="assetDomainFilter">
+            <option value="">全部主域</option><option>经营</option><option>营销</option><option>销售</option><option>品牌</option><option>内容</option><option>设计</option><option>施工</option><option>客户</option><option>产品</option><option>财务</option><option>自动化</option><option>认知</option><option>个人决策</option>
+          </select>
+          <select id="assetFunctionFilter">
+            <option value="">全部功能</option><option>判断</option><option>方法</option><option>模型</option><option>SOP</option><option>框架</option><option>规则</option><option>复盘</option><option>问答</option><option>认知纠偏</option>
+          </select>
+          <select id="assetUseCaseFilter">
+            <option value="">全部场景</option><option>工作台</option><option>视频号</option><option>咨询</option><option>销售</option><option>交付</option><option>培训</option><option>对外表达</option><option>产品化</option><option>内部统一认知</option><option>项目复盘</option>
+          </select>
+          <select id="assetKnowledgeFilter">
+            <option value="">全部知识状态</option><option value="draft">draft</option><option value="active">active</option><option value="principle">principle</option><option value="superseded">superseded</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="filterAssets" class="btn">筛选资产</button>
+          <button id="clearAssetFilters" class="btn ghost">清空筛选</button>
+        </div>
+      </div>
+
+      <div class="grid2 section">
         <div class="card"><div class="section-head"><b>待沉淀</b><button id="refreshAssets" class="btn ghost">刷新</button></div><div id="candidateList" class="status">正在读取…</div></div>
-        <div class="card"><div class="section-head"><b>正式资产</b><span>最近更新</span></div><div class="search"><input id="assetQuery" placeholder="搜索：排水 / 客户需求 / 自动化 / 报价"><button id="searchAssets" class="btn">搜索</button></div><div id="assetList" class="status">正在读取…</div></div>
+        <div class="card"><div class="section-head"><b>正式资产</b><span>最近更新</span></div><div class="search"><input id="assetQuery" placeholder="搜索：主题 / 标签 / 判断 / 场景"><button id="searchAssets" class="btn">搜索</button></div><div id="assetList" class="status">正在读取…</div></div>
       </div>
     </section>
 
@@ -577,7 +621,17 @@ function renderCandidates(items){
 }
 function renderAssets(items){
   if(!items.length){q('#assetList').innerHTML='<div class="status">暂无正式资产。</div>';return}
-  q('#assetList').innerHTML=items.map(a=>'<div class="asset"><div class="asset-head"><div><div class="asset-title">'+esc(a.title||'未命名资产')+'</div><div class="asset-body">'+esc(clip(a.summary||a.body,220))+'</div></div><span class="badge">'+esc(a.asset_type||'asset')+' · '+esc(a.validation_state||'observed')+'</span></div><div class="asset-body">'+esc(a.domain||'general')+' · 已复用 '+esc(a.reuse_count||0)+' 次</div></div>').join('');
+  q('#assetList').innerHTML=items.map(a=>{
+    const no=a.card_no?esc(a.card_no)+' · ':'';
+    const primary=esc(a.primary_domain||a.domain||'general');
+    const secondary=(a.secondary_domains||[]).map(esc).join(' / ');
+    const funcs=(a.function_tags||[]).map(esc).join(' / ');
+    const uses=(a.use_case_tags||[]).map(esc).join(' / ');
+    const state=esc(a.validation_state||'observed')+' · '+esc(a.knowledge_status||'active');
+    const judgment=a.one_line_judgment?'<div class="asset-body"><b>一句话：</b>'+esc(a.one_line_judgment)+'</div>':'';
+    const taxonomy=[primary,secondary,funcs,uses].filter(Boolean).join(' · ');
+    return '<div class="asset"><div class="asset-head"><div><div class="asset-title">'+no+esc(a.title||'未命名资产')+'</div><div class="asset-body">'+esc(clip(a.summary||a.body,220))+'</div></div><span class="badge">'+state+'</span></div>'+judgment+'<div class="asset-body">'+taxonomy+' · 已复用 '+esc(a.reuse_count||0)+' 次</div></div>';
+  }).join('');
 }
 async function loadAssets(){
   try{
@@ -585,6 +639,19 @@ async function loadAssets(){
     q('#statInbox').textContent=s.inbox_total??0;q('#statCandidates').textContent=s.candidates_waiting??0;q('#statAssets').textContent=s.assets_total??0;renderCandidates(c.items||[]);renderAssets(a.assets||[]);
   }catch(e){q('#assetList').innerHTML='<div class="status">'+esc(e.message)+'</div>'}
 }
+async function loadFilteredAssets(){
+  const payload={action:'list_assets',limit:60};
+  const d=q('#assetDomainFilter').value;if(d)payload.primary_domain=d;
+  const f=q('#assetFunctionFilter').value;if(f)payload.function_tag=f;
+  const u=q('#assetUseCaseFilter').value;if(u)payload.use_case_tag=u;
+  const k=q('#assetKnowledgeFilter').value;if(k)payload.knowledge_status=k;
+  q('#filterAssets').disabled=true;
+  try{const x=await assetCall(payload);renderAssets(x.assets||[])}
+  catch(e){q('#assetList').innerHTML='<div class="status">'+esc(e.message)+'</div>'}
+  finally{q('#filterAssets').disabled=false}
+}
+q('#filterAssets').onclick=loadFilteredAssets;
+q('#clearAssetFilters').onclick=()=>{q('#assetDomainFilter').value='';q('#assetFunctionFilter').value='';q('#assetUseCaseFilter').value='';q('#assetKnowledgeFilter').value='';loadAssets()};
 q('#refreshAssets').onclick=loadAssets;
 q('#searchAssets').onclick=async()=>{const term=q('#assetQuery').value.trim();if(!term)return loadAssets();q('#searchAssets').disabled=true;try{const x=await assetCall({action:'search',query:term,limit:30});renderAssets(x.assets||[])}catch(e){q('#assetList').innerHTML='<div class="status">'+esc(e.message)+'</div>'}finally{q('#searchAssets').disabled=false}};
 q('#assetQuery').addEventListener('keydown',e=>{if(e.key==='Enter')q('#searchAssets').click()});

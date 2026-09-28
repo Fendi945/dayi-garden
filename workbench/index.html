@@ -444,7 +444,8 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{bor
   </section>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0"></script>
+<script src="./session.js"></script>
 <script>
 const SUPABASE_URL='https://fhvhnibznphatfnbvvnb.supabase.co';
 const PUBLIC_KEY='sb_publishable_8_ElUXtWKbEM9Of37zdYug_mdWjcV4B';
@@ -454,7 +455,7 @@ const ASSET_URL=SUPABASE_URL+'/functions/v1/day1-asset-api';
 const DASH_URL=SUPABASE_URL+'/functions/v1/day1-dashboard-api';
 const CRM_URL=SUPABASE_URL+'/functions/v1/day1-crm-api';
 const BUSINESS_URL=SUPABASE_URL+'/functions/v1/day1-business-api';
-const sb=supabase.createClient(SUPABASE_URL,PUBLIC_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const sb=supabase.createClient(SUPABASE_URL,PUBLIC_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true},global:{fetch:(url,options)=>Day1Session.fetchWithTimeout(url,options)}});
 const q=s=>document.querySelector(s),qa=s=>Array.from(document.querySelectorAll(s));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const clip=(s,n)=>{s=String(s||'').trim();return s.length>n?s.slice(0,n)+'…':s};
@@ -462,49 +463,47 @@ const pct=v=>Number.isFinite(Number(v))?Math.round(Number(v)*100)+'%':'—';
 const cny=v=>'¥'+Number(v||0).toLocaleString('zh-CN',{maximumFractionDigits:2});
 let dashboard=null;
 
-async function currentSession(){const {data}=await sb.auth.getSession();return data.session||null}
-async function token(){
-  let s=await currentSession();if(!s)throw Error('请重新登录。');
-  if(s.expires_at&&s.expires_at*1000<Date.now()+60000){const {data,error}=await sb.auth.refreshSession();if(error||!data.session)throw Error('登录已过期，请重新登录。');s=data.session}
-  return s.access_token;
+// Keep the confirmed interface; restore only dynamic/private content at sign-out.
+const privateViewDefaults=new Map(qa('#appView [id]').filter(el=>['dashOrders','clientOrders','dashTasks','crmContacts','assetList','candidateList','taskList','result','crmMsg','passwordMsg','dashAsOf','jevStatus','sJev','sAsset','mClients','mMonthRevenue','mOpenOrders','mAssets','cClients','cPipeline','cFollow','cWon','fMonth','fAll','fPaid','activeTaskCount','orderCount','pipeLead','pipeContacted','pipeQualified','pipeProposal','pipeWon','pipeLost','pipeOverdue','statAssets','statCandidates','statInbox'].includes(el.id)).map(el=>[el,el.innerHTML]));
+function showLogin(){
+  dashboard=null;privateViewDefaults.forEach((html,el)=>el.innerHTML=html);
+  qa('#appView input,#appView textarea').forEach(el=>el.value='');q('#loginPassword').value='';
+  q('#loginView').classList.remove('hidden');q('#appView').classList.add('hidden');q('#nav').classList.add('hidden');
 }
-async function api(url,body){
-  const t=await token();
-  const r=await fetch(url,{method:'POST',headers:{apikey:PUBLIC_KEY,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify(body||{})});
-  const x=await r.json().catch(()=>({}));
-  if(r.status===401){await sb.auth.signOut();showLogin();throw Error('登录已过期，请重新登录。')}
-  if(!r.ok)throw Error(x.message||x.error||('请求失败 '+r.status));return x;
-}
-function showLogin(){q('#loginView').classList.remove('hidden');q('#appView').classList.add('hidden');q('#nav').classList.add('hidden')}
-function showApp(){q('#loginView').classList.add('hidden');q('#appView').classList.remove('hidden');q('#nav').classList.remove('hidden');openTab('dashboard');loadDashboard();checkJev()}
+function showApp(){q('#loginPassword').value='';q('#loginView').classList.add('hidden');q('#appView').classList.remove('hidden');q('#nav').classList.remove('hidden');openTab('dashboard');checkJev()}
+const sessionControl=Day1Session.create({auth:sb.auth,publicKey:PUBLIC_KEY,onSession:showApp,onSignedOut:showLogin,onRecovery:()=>openTab('account')});
+async function api(url,body){return sessionControl.api(url,body)}
 function openTab(name){
   ['dashboard','clients','finance','design','content','assets','tasks','core','account'].forEach(n=>q('#tab-'+n).classList.toggle('hidden',n!==name));
   qa('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
   if(name==='assets')loadAssets();if(name==='tasks')loadTasks();if(name==='clients')loadCRM();if((name==='clients'||name==='finance'||name==='dashboard')&&!dashboard)loadDashboard();
 }
 qa('[data-tab]').forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
-q('#logoutBtn').onclick=async()=>{await sb.auth.signOut();showLogin()};
+q('#logoutBtn').onclick=async()=>{try{await sessionControl.signOut()}catch(e){q('#loginMsg').textContent=e.message}};
 
 q('#magicBtn').onclick=async()=>{
   const email=q('#loginEmail').value.trim();if(!email)return;
   q('#magicBtn').disabled=true;q('#magicMsg').textContent='正在发送登录链接…';
   const redirectTo=window.location.origin+window.location.pathname;
-  const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:redirectTo}});
-  q('#magicBtn').disabled=false;q('#magicMsg').textContent=error?(error.message||'发送失败'):'登录链接已发送。点击邮件里的链接，会回到这个工作台。';
+  try{const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:redirectTo}});
+    q('#magicMsg').textContent=error?(error.message||'发送失败'):'登录链接已发送。点击邮件里的链接，会回到这个工作台。';
+  }catch{q('#magicMsg').textContent='暂时无法连接，请检查网络后重试。'}finally{q('#magicBtn').disabled=false}
 };
 q('#togglePassword').onclick=()=>q('#passwordBox').classList.toggle('hidden');
 q('#passwordBtn').onclick=async()=>{
   q('#passwordBtn').disabled=true;q('#loginMsg').textContent='正在登录…';
-  const {error}=await sb.auth.signInWithPassword({email:q('#loginEmail').value.trim(),password:q('#loginPassword').value});
-  q('#passwordBtn').disabled=false;q('#loginMsg').textContent=error?'邮箱或密码未通过验证。':'';
+  try{const {error}=await sb.auth.signInWithPassword({email:q('#loginEmail').value.trim(),password:q('#loginPassword').value});
+    q('#loginMsg').textContent=error?'邮箱或密码未通过验证。':'';
+  }catch{q('#loginMsg').textContent='暂时无法连接，请检查网络后重试。'}finally{q('#passwordBtn').disabled=false}
 };
 q('#setPasswordBtn').onclick=async()=>{
   const a=q('#newPassword').value,b=q('#confirmPassword').value;if(a.length<8){q('#passwordMsg').textContent='密码至少 8 位。';return}if(a!==b){q('#passwordMsg').textContent='两次密码不一致。';return}
-  q('#setPasswordBtn').disabled=true;q('#passwordMsg').textContent='正在设置…';const {error}=await sb.auth.updateUser({password:a});q('#setPasswordBtn').disabled=false;
-  q('#passwordMsg').textContent=error?(error.message||'设置失败'):'新密码已设置成功。';if(!error){q('#newPassword').value='';q('#confirmPassword').value=''}
+  q('#setPasswordBtn').disabled=true;q('#passwordMsg').textContent='正在设置…';
+  try{const {error}=await sb.auth.updateUser({password:a});
+    q('#passwordMsg').textContent=error?(error.message||'设置失败'):'新密码已设置成功。';if(!error){q('#newPassword').value='';q('#confirmPassword').value=''}
+  }catch{q('#passwordMsg').textContent='暂时无法连接，请检查网络后重试。'}finally{q('#setPasswordBtn').disabled=false}
 };
-sb.auth.onAuthStateChange((event,session)=>{if(session)showApp();else if(event==='SIGNED_OUT')showLogin()});
-(async()=>{const s=await currentSession();s?showApp():showLogin()})();
+sessionControl.start().catch(()=>{showLogin();q('#loginMsg').textContent='无法恢复登录，请检查网络后重试。'});
 
 async function checkJev(){
   q('#jevStatus').textContent='JEV · 检查中';q('#sJev').textContent='…';

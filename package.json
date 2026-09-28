@@ -1,0 +1,6 @@
+{
+  "name": "day1-workbench-static",
+  "private": true,
+  "scripts": {"test": "node --test tests/*.test.mjs", "smoke": "node scripts/smoke.mjs"},
+  "engines": {"node": ">=22"}
+}

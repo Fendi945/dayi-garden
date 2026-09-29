@@ -9,6 +9,64 @@
     try { return await fetcher(url, {...options, signal: controller.signal}); }
     finally { clearTimeout(timer); options.signal?.removeEventListener('abort', abort); }
   }
+  function createMagicLinkSender({auth, onState, storage, now = Date.now, schedule = setTimeout, cancel = clearTimeout}) {
+    const key = 'day1.auth.emailRetryAt.v1', cooldown = 60000;
+    let pending = false, retryAt = 0, timer = null, message = '';
+    if (storage === undefined) { try { storage = root.localStorage; } catch {} }
+    function savedRetryAt() {
+      try {
+        const value = Number(storage?.getItem(key));
+        return Number.isFinite(value) && value > now() && value <= now() + cooldown ? value : 0;
+      } catch { return 0; }
+    }
+    function pauseResend() {
+      retryAt = now() + cooldown;
+      // Persist only the deadline, never an email, credential or session.
+      try { storage?.setItem(key, String(retryAt)); } catch {}
+    }
+    function render() {
+      retryAt = Math.max(retryAt, savedRetryAt());
+      const retrySeconds = Math.max(0, Math.ceil((retryAt - now()) / 1000));
+      if (timer !== null) cancel(timer);
+      timer = null;
+      onState({pending, retrySeconds, disabled: pending || retrySeconds > 0, message});
+      // This timer updates the button only; it never sends a request.
+      if (retrySeconds) timer = schedule(render, Math.min(1000, retryAt - now()));
+    }
+    async function send(email, redirectTo) {
+      retryAt = Math.max(retryAt, savedRetryAt());
+      if (pending || retryAt > now()) { render(); return false; }
+      email = String(email || '').trim();
+      if (!email) { message = '请输入已开通的 DAY1 后台邮箱。'; render(); return false; }
+      pending = true; message = '正在发送登录链接…'; render();
+      try {
+        const {error} = await auth.signInWithOtp({email, options: {shouldCreateUser: false, emailRedirectTo: redirectTo}});
+        if (error) {
+          if (error.status === 429 || ['over_email_send_rate_limit', 'over_request_rate_limit'].includes(error.code) || /rate limit/i.test(error.message || '')) {
+            pauseResend();
+            message = '暂时无法发送更多登录邮件，请先查看收件箱或稍后重试。已设置后台密码时可使用密码登录。';
+          } else if (error.code === 'signup_disabled' || /signups? not allowed/i.test(error.message || '')) {
+            message = '请使用已开通的 DAY1 后台邮箱，本页不支持注册。';
+          } else {
+            message = '登录链接未发送成功，请检查后台邮箱后稍后重试。';
+          }
+          return false;
+        }
+        pauseResend();
+        message = '登录邮件已发送，尚未完成登录。请在希望使用 DAY1 的浏览器中打开最新邮件里的链接，进入工作台后才算登录成功。';
+        return true;
+      } catch {
+        // A timeout can occur after the service accepted the email request.
+        pauseResend();
+        message = '暂时无法确认邮件是否发出。请先查看收件箱，再尝试重发。';
+        return false;
+      } finally { pending = false; render(); }
+    }
+    retryAt = savedRetryAt();
+    if (retryAt) message = '登录邮件暂不可重发，请先查看收件箱。';
+    render();
+    return {send};
+  }
   function create({auth, publicKey, onSession, onSignedOut, onRecovery, fetcher = root.fetch.bind(root), timeout = 30000}) {
     let userId = null, epoch = 0, refresh = null, eventVersion = 0;
     const pending = new Set();
@@ -81,5 +139,5 @@
     }
     return {start, api, signOut};
   }
-  root.Day1Session = {create, fetchWithTimeout};
+  root.Day1Session = {create, fetchWithTimeout, createMagicLinkSender};
 })(globalThis);

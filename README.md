@@ -7,6 +7,7 @@ This repository contains the public static frontend and brand assets. Private ba
 Node 22+ is used for hardening tests. Serve static files with `python3 -m http.server 8080` and open /workbench/. Existing configuration points at production: use read-only inspection unless explicitly running a synthetic E2E. Do not use local HTML files as the production entry.
 
 Run `npm test` for session recovery/concurrency and exact protected HTML/CSS/navigation checks. Run `npm run smoke` for read-only HTTP checks of the formal URL and preserved customer routes. After deploying this candidate, run `npm run smoke -- --candidate` to verify the session module is served. `DAY1_SMOKE_URL` can point to an explicitly controlled preview base URL.
+The login sender distinguishes an email request from a signed-in session. It prevents concurrent sends and keeps a 60-second resend deadline across reloads; only the timestamp is stored, never an email or credential. Network ambiguity and rate limiting never cause automatic resend. The server's actual quota may remain in force after this local cooldown.
 The CI workflow runs the offline tests on pushes and pull requests; it has read-only repository permissions and no deployment credentials. No production database writes occur in tests.
 
 ## Deployment and rollback

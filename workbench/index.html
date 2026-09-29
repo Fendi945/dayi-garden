@@ -481,14 +481,12 @@ function openTab(name){
 qa('[data-tab]').forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
 q('#logoutBtn').onclick=async()=>{try{await sessionControl.signOut()}catch(e){q('#loginMsg').textContent=e.message}};
 
-q('#magicBtn').onclick=async()=>{
-  const email=q('#loginEmail').value.trim();if(!email)return;
-  q('#magicBtn').disabled=true;q('#magicMsg').textContent='正在发送登录链接…';
-  const redirectTo=window.location.origin+window.location.pathname;
-  try{const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:redirectTo}});
-    q('#magicMsg').textContent=error?(error.message||'发送失败'):'登录链接已发送。点击邮件里的链接，会回到这个工作台。';
-  }catch{q('#magicMsg').textContent='暂时无法连接，请检查网络后重试。'}finally{q('#magicBtn').disabled=false}
-};
+const magicLinkSender=Day1Session.createMagicLinkSender({auth:sb.auth,onState:({pending,retrySeconds,disabled,message})=>{
+  q('#magicBtn').disabled=disabled;
+  q('#magicBtn').textContent=pending?'正在发送…':retrySeconds?'重新发送（'+retrySeconds+'秒）':'发送登录链接';
+  if(message)q('#magicMsg').textContent=message;
+}});
+q('#magicBtn').onclick=()=>magicLinkSender.send(q('#loginEmail').value,window.location.origin+window.location.pathname);
 q('#togglePassword').onclick=()=>q('#passwordBox').classList.toggle('hidden');
 q('#passwordBtn').onclick=async()=>{
   q('#passwordBtn').disabled=true;q('#loginMsg').textContent='正在登录…';

@@ -168,13 +168,20 @@ input:focus{border-color:#999}
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0"></script>
 <script>
 (function(){
   var SUPABASE_URL='https://fhvhnibznphatfnbvvnb.supabase.co';
   var ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZodmhuaWJ6bnBoYXRmbmJ2dm5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3MzMzNDgsImV4cCI6MjEwNTMwOTM0OH0.OSuLOzcuMLmPnZ17EMaz6lXrOY4CGgBJWMV96HHg1LU';
+  var PUBLIC_KEY='sb_publishable_8_ElUXtWKbEM9Of37zdYug_mdWjcV4B';
   var ADMIN_EMAIL='day1garden58@gmail.com';
   var currentDays=1;
-  var session=JSON.parse(localStorage.getItem('dayi_admin_session')||'null');
+  var session=null;
+  try{session=JSON.parse(localStorage.getItem('dayi_admin_session')||'null')}catch(e){localStorage.removeItem('dayi_admin_session')}
+  var sharedAuth=window.supabase&&window.supabase.createClient(SUPABASE_URL,PUBLIC_KEY,{
+    auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}
+  });
+  var usingShared=false;
   var $=function(id){return document.getElementById(id)};
 
   function baseHeaders(token,extra){
@@ -182,8 +189,22 @@ input:focus{border-color:#999}
     if(extra) Object.keys(extra).forEach(function(k){h[k]=extra[k]});
     return h;
   }
-  function saveSession(s){session=s;localStorage.setItem('dayi_admin_session',JSON.stringify(s))}
-  function clearSession(){session=null;localStorage.removeItem('dayi_admin_session')}
+  function saveSession(s){session=s;usingShared=false;localStorage.setItem('dayi_admin_session',JSON.stringify(s))}
+  function clearSession(){session=null;usingShared=false;localStorage.removeItem('dayi_admin_session')}
+  async function verifyOwner(token){
+    if(!token)return false;
+    var r=await fetch(SUPABASE_URL+'/rest/v1/rpc/day1_is_admin',{
+      method:'POST',headers:{apikey:PUBLIC_KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:'{}'
+    });
+    return r.ok && await r.json()===true;
+  }
+  async function restoreWorkbenchSession(){
+    if(!sharedAuth)return false;
+    var result=await sharedAuth.auth.getSession();
+    var next=result.data&&result.data.session;
+    if(result.error||!next||!await verifyOwner(next.access_token))return false;
+    session=next;usingShared=true;return true;
+  }
   async function passwordLogin(email,password){
     var r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{
       method:'POST',headers:baseHeaders(null,{'Content-Type':'application/json'}),
@@ -204,11 +225,20 @@ input:focus{border-color:#999}
   }
   async function authFetch(url,opts){
     opts=opts||{};
-    opts.headers=Object.assign({},baseHeaders(session&&session.access_token),opts.headers||{});
-    var r=await fetch(url,opts);
-    if(r.status===401 && await refreshSession()){
-      opts.headers=Object.assign({},baseHeaders(session.access_token),opts.headers||{});
-      r=await fetch(url,opts);
+    var extra=opts.headers||{};
+    if(usingShared){
+      var current=await sharedAuth.auth.getSession();
+      if(current.error||!current.data||!current.data.session)throw new Error('登录已过期');
+      session=current.data.session;
+    }
+    var r=await fetch(url,Object.assign({},opts,{headers:baseHeaders(session&&session.access_token,extra)}));
+    if(r.status===401){
+      if(usingShared){
+        var refreshed=await sharedAuth.auth.refreshSession();
+        if(refreshed.error||!refreshed.data||!refreshed.data.session)throw new Error('登录已过期');
+        session=refreshed.data.session;
+      }else if(!await refreshSession())return r;
+      r=await fetch(url,Object.assign({},opts,{headers:baseHeaders(session.access_token,extra)}));
     }
     return r;
   }
@@ -268,7 +298,7 @@ input:focus{border-color:#999}
     var advice=Array.isArray(o.advice_json)?o.advice_json:[];
     var resultA=publicResultUrl(o.result_a_path);
     var resultB=publicResultUrl(o.result_b_path);
-    var amount=(o.amount_cny===null||o.amount_cny===undefined)?'测试单':'¥'+Number(o.amount_cny).toFixed(1);
+    var amount=o.is_test?'测试订单（未实际付款）':(o.amount_cny===null||o.amount_cny===undefined)?'测试单':'¥'+Number(o.amount_cny).toFixed(1);
 
     var originalPhoto=o.photo_path
       ? '<img id="yard_'+id+'" class="detail-img hidden" alt="庭院现场原图"><div id="yard_ph_'+id+'" class="img-placeholder">正在读取庭院现场原图…</div>'
@@ -326,24 +356,32 @@ input:focus{border-color:#999}
         '</div>'+
         '<div class="order-actions">'+
           ((o.payment_status==='pending_verification'||o.process_status==='waiting_payment_verification')
-            ? '<button class="action-primary" data-confirm-generate="'+esc(o.order_code||'')+'">确认付款并生成</button>'
+            ? '<button class="action-primary" data-confirm-generate="'+esc(o.order_code||'')+'">'+(o.is_test?'确认测试付款':'确认付款并生成')+'</button>'
             : (o.process_status==='failed'||o.process_status==='pending_generation'||o.process_status==='queued')
               ? '<button class="action-secondary" data-retry-generate="'+esc(o.order_code||'')+'">重新尝试生成</button>'
               : '')+
         '</div>'+
         '<div id="action_note_'+id+'" class="action-note">'+
           ((o.payment_status==='pending_verification'||o.process_status==='waiting_payment_verification')
-            ? '核对付款截图无误后再点击。'
+            ? (o.is_test?'仅用于 E2E 测试；不代表真实到账，也不会启动付费生图。':'核对付款截图无误后再点击。')
             : '')+
         '</div>'+
       '</details>'+
     '</div>';
   }
-  async function confirmAndGenerate(orderCode,btn){
-    if(!window.confirm('确认这笔款项已经收到，并让订单进入生成流程吗？')) return;
+  async function confirmAndGenerate(orderCode,btn,isTest){
+    if(!window.confirm(isTest?'确认这笔测试订单的模拟付款，并进入测试生成流程吗？':'确认这笔款项已经收到，并让订单进入生成流程吗？')) return;
     var old=btn.textContent; btn.disabled=true; btn.textContent='正在确认…';
     var note=$('action_note_'+safeId(orderCode));
     try{
+      if(isTest){
+        var testResult=await adminApiJson({action:'admin_confirm',order_code:orderCode});
+        if(!testResult.confirmed)throw new Error('测试订单确认失败');
+        if(note)note.textContent='测试付款已记录；自动生图仍关闭，可人工上传结果进行交付测试。';
+        btn.textContent='测试付款已确认';
+        await loadOrders();
+        return;
+      }
       var r=await authFetch(SUPABASE_URL+'/rest/v1/rpc/admin_confirm_direction_feedback_order',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -473,7 +511,7 @@ input:focus{border-color:#999}
   }
 
   async function loadOrders(){
-    var fields='order_code,created_at,updated_at,amount_cny,payment_status,process_status,contact,yard_size,needs,style,notes,photo_path,payment_proof_path,prompt,result_a_path,result_b_path,advice_json';
+    var fields='order_code,created_at,updated_at,amount_cny,is_test,payment_status,process_status,contact,yard_size,needs,style,notes,photo_path,payment_proof_path,prompt,result_a_path,result_b_path,advice_json';
     var q='?select='+fields+'&order=created_at.desc&limit=10';
     var r=await authFetch(SUPABASE_URL+'/rest/v1/orders'+q,{headers:{'Accept':'application/json'}});
     if(!r.ok) throw new Error(await r.text());
@@ -494,7 +532,11 @@ input:focus{border-color:#999}
     });
 
     document.querySelectorAll('[data-confirm-generate]').forEach(function(btn){
-      btn.addEventListener('click',function(){confirmAndGenerate(btn.getAttribute('data-confirm-generate'),btn)});
+      btn.addEventListener('click',function(){
+        var code=btn.getAttribute('data-confirm-generate');
+        var row=rows.find(function(x){return x.order_code===code});
+        if(row)confirmAndGenerate(code,btn,row.is_test===true);
+      });
     });
     document.querySelectorAll('[data-retry-generate]').forEach(function(btn){
       btn.addEventListener('click',function(){retryGenerate(btn.getAttribute('data-retry-generate'),btn)});
@@ -544,7 +586,7 @@ input:focus{border-color:#999}
 
       $('lastUpdated').textContent='更新 '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
     }catch(err){
-      if(String(err).indexOf('JWT')>=0 || String(err).indexOf('401')>=0){showLogin('登录已过期，请重新登录。')}
+      if(/JWT|401|登录已过期/.test(String(err))){showLogin('登录已过期，请重新登录。')}
       else $('lastUpdated').textContent='读取失败';
     }
   }
@@ -555,6 +597,7 @@ input:focus{border-color:#999}
   }
   function showLogin(msg){
     $('dashboard').classList.add('hidden');$('loginView').classList.remove('hidden');$('logoutBtn').classList.add('hidden');
+    $('orders').replaceChildren();$('sources').replaceChildren();$('funnel').replaceChildren();
     $('adminEmail').textContent=''; if(msg)$('loginError').textContent=msg;
   }
 
@@ -563,12 +606,20 @@ input:focus{border-color:#999}
     try{
       var email=$('email').value.trim(), password=$('password').value;
       if(email!==ADMIN_EMAIL) throw new Error('这个仪表盘只允许大一造园管理员账号登录。');
-      await passwordLogin(email,password); $('password').value=''; showDash();
+      var login=await passwordLogin(email,password);
+      if(!await verifyOwner(login.access_token)){clearSession();throw new Error('此账号没有管理员权限。')}
+      $('password').value=''; showDash();
     }catch(e){$('loginError').textContent=e.message||String(e)}
     btn.disabled=false;btn.textContent='登录仪表盘';
   };
   $('password').addEventListener('keydown',function(e){if(e.key==='Enter')$('loginBtn').click()});
-  $('logoutBtn').onclick=function(){clearSession();showLogin('已退出登录。')};
+  $('logoutBtn').onclick=async function(){
+    if(usingShared)try{await sharedAuth.auth.signOut({scope:'local'})}catch(e){}
+    clearSession();showLogin('已退出登录。');
+  };
+  if(sharedAuth)sharedAuth.auth.onAuthStateChange(function(event){
+    if(event==='SIGNED_OUT'&&usingShared){clearSession();showLogin('已退出登录。')}
+  });
   document.querySelectorAll('.range button').forEach(function(btn){
     btn.onclick=function(){
       document.querySelectorAll('.range button').forEach(function(b){b.classList.remove('active')});
@@ -577,9 +628,14 @@ input:focus{border-color:#999}
   });
 
   (async function(){
-    if(session&&session.access_token){
-      var r=await authFetch(SUPABASE_URL+'/auth/v1/user',{headers:{'Accept':'application/json'}});
-      if(r.ok){var u=await r.json();if(u.email===ADMIN_EMAIL){showDash();return}}
+    try{
+      if(await restoreWorkbenchSession()){showDash();return}
+      if(session&&session.access_token){
+        var r=await authFetch(SUPABASE_URL+'/auth/v1/user',{headers:{'Accept':'application/json'}});
+        if(r.ok){var u=await r.json();if(u.email===ADMIN_EMAIL&&await verifyOwner(session.access_token)){showDash();return}}
+        clearSession();
+      }
+    }catch(e){
       clearSession();
     }
     showLogin();

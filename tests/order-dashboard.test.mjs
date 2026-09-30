@@ -133,7 +133,7 @@ test('completed synthetic order exposes an owner-generated customer link without
   assert.equal(calls.length,1);
   assert.deepEqual(JSON.parse(calls[0].body),{action:'admin_result_link',order_code:'DAYI-260930-TESTORDER'});
   const link=app.element('action_note_DAYI-260930-TESTORDER').children[0];
-  assert.match(link.href,/^https:\/\/dayi-garden-feedback\.day1garden58\.chatgpt\.site\/direction-feedback\/#order=DAYI-260930-TESTORDER&key=a{64}$/);
+  assert.match(link.href,/^https:\/\/fendi945\.github\.io\/dayi-garden\/direction-feedback\/#order=DAYI-260930-TESTORDER&key=a{64}$/);
   assert.equal(link.rel,'noopener noreferrer');
   const real=dashboard({state:'completed',privateResult:true,isTest:false});await real.settle();
   assert.doesNotMatch(real.element('orders').innerHTML,/data-open-test-result/);

@@ -174,7 +174,7 @@ input:focus{border-color:#999}
   var SUPABASE_URL='https://fhvhnibznphatfnbvvnb.supabase.co';
   var ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZodmhuaWJ6bnBoYXRmbmJ2dm5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3MzMzNDgsImV4cCI6MjEwNTMwOTM0OH0.OSuLOzcuMLmPnZ17EMaz6lXrOY4CGgBJWMV96HHg1LU';
   var PUBLIC_KEY='sb_publishable_8_ElUXtWKbEM9Of37zdYug_mdWjcV4B';
-  var CUSTOMER_URL='https://dayi-garden-feedback.day1garden58.chatgpt.site/direction-feedback/';
+  var CUSTOMER_URL='https://fendi945.github.io/dayi-garden/direction-feedback/';
   var ADMIN_EMAIL='day1garden58@gmail.com';
   var currentDays=1;
   var session=null;
@@ -474,7 +474,7 @@ input:focus{border-color:#999}
       var url=new URL(CUSTOMER_URL);
       url.hash=new URLSearchParams({order:orderCode,key:x.access_token}).toString();
       if(note){
-        note.textContent='仅供合成测试；客户站点目前还需 ChatGPT 登录。若登录后未显示结果，请回到这里重新打开链接。 ';
+        note.textContent='仅供合成测试；点击下方链接即可查看私有交付。请勿转发包含查看凭证的链接。 ';
         var link=document.createElement('a');link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';link.textContent='打开测试结果页';note.appendChild(link);
       }
       btn.textContent='测试入口已生成';

@@ -174,6 +174,7 @@ input:focus{border-color:#999}
   var SUPABASE_URL='https://fhvhnibznphatfnbvvnb.supabase.co';
   var ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZodmhuaWJ6bnBoYXRmbmJ2dm5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3MzMzNDgsImV4cCI6MjEwNTMwOTM0OH0.OSuLOzcuMLmPnZ17EMaz6lXrOY4CGgBJWMV96HHg1LU';
   var PUBLIC_KEY='sb_publishable_8_ElUXtWKbEM9Of37zdYug_mdWjcV4B';
+  var CUSTOMER_URL='https://dayi-garden-feedback.day1garden58.chatgpt.site/direction-feedback/';
   var ADMIN_EMAIL='day1garden58@gmail.com';
   var currentDays=1;
   var session=null;
@@ -376,6 +377,9 @@ input:focus{border-color:#999}
             : (!o.is_test&&(o.process_status==='failed'||o.process_status==='pending_generation'||o.process_status==='queued'))
               ? '<button class="action-secondary" data-retry-generate="'+esc(o.order_code||'')+'">重新尝试生成</button>'
               : '')+
+          (o.is_test&&o.process_status==='completed'&&o.result_a_path&&advice.length===3
+            ? '<button class="action-secondary" data-open-test-result="'+esc(o.order_code||'')+'">获取测试结果入口</button>'
+            : '')+
         '</div>'+
         '<div id="action_note_'+id+'" class="action-note">'+
           ((o.payment_status==='pending_verification'||o.process_status==='waiting_payment_verification')
@@ -458,6 +462,26 @@ input:focus{border-color:#999}
     var x={};try{x=await r.json()}catch(e){}
     if(!r.ok) throw new Error(x.message||x.error||'后台操作失败');
     return x;
+  }
+
+  async function showTestResultLink(orderCode,btn){
+    var note=$('action_note_'+safeId(orderCode));
+    btn.disabled=true;
+    if(note)note.textContent='正在生成仅供测试的结果入口…';
+    try{
+      var x=await adminApiJson({action:'admin_result_link',order_code:orderCode});
+      if(x.order_code!==orderCode||!/^[a-f0-9]{64}$/.test(x.access_token||''))throw new Error('测试结果入口无效');
+      var url=new URL(CUSTOMER_URL);
+      url.hash=new URLSearchParams({order:orderCode,key:x.access_token}).toString();
+      if(note){
+        note.textContent='仅供合成测试；客户站点目前还需 ChatGPT 登录。若登录后未显示结果，请回到这里重新打开链接。 ';
+        var link=document.createElement('a');link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';link.textContent='打开测试结果页';note.appendChild(link);
+      }
+      btn.textContent='测试入口已生成';
+    }catch(e){
+      if(note)note.textContent=e.message||String(e);
+      btn.disabled=false;
+    }
   }
 
   async function loadAdminPrompt(orderCode,btn){
@@ -557,6 +581,9 @@ input:focus{border-color:#999}
     });
     document.querySelectorAll('[data-retry-generate]').forEach(function(btn){
       btn.addEventListener('click',function(){retryGenerate(btn.getAttribute('data-retry-generate'),btn)});
+    });
+    document.querySelectorAll('[data-open-test-result]').forEach(function(btn){
+      btn.addEventListener('click',function(){showTestResultLink(btn.getAttribute('data-open-test-result'),btn)});
     });
     document.querySelectorAll('[data-load-prompt]').forEach(function(btn){
       btn.addEventListener('click',function(){loadAdminPrompt(btn.getAttribute('data-load-prompt'),btn)});

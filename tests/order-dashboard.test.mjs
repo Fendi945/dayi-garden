@@ -12,7 +12,7 @@ function dashboard({owner=true,shared=true,firstOrderUnauthorized=false,isTest=t
   let token='workbench-token', authEvent, denied=false, confirmCount=0;
   function element(id){
     if(!elements.has(id))elements.set(id,{
-      value:'',textContent:'',innerHTML:'',disabled:false,
+      value:'',textContent:'',innerHTML:'',disabled:false,children:[],appendChild(child){this.children.push(child)},
       classList:{values:new Set(),add(x){this.values.add(x)},remove(x){this.values.delete(x)},contains(x){return this.values.has(x)}},
       replaceChildren(){this.innerHTML='';this.textContent=''},
       addEventListener(){},click(){this.onclick?.()},getAttribute(){return ''}
@@ -21,6 +21,7 @@ function dashboard({owner=true,shared=true,firstOrderUnauthorized=false,isTest=t
   }
   const document={
     getElementById:element,
+    createElement:()=>({href:'',target:'',rel:'',textContent:''}),
     querySelectorAll(selector){
       if(selector==='#orders details'){
         return [...element('orders').innerHTML.matchAll(/<details data-order="([^"]+)"/g)].map(match=>{
@@ -34,10 +35,16 @@ function dashboard({owner=true,shared=true,firstOrderUnauthorized=false,isTest=t
           buttons.push(b);return b;
         });
       }
+      if(selector==='[data-open-test-result]'){
+        return [...element('orders').innerHTML.matchAll(/data-open-test-result="([^"]+)"/g)].map(match=>{
+          const b={textContent:'获取测试结果入口',disabled:false,getAttribute:()=>match[1],addEventListener(_,fn){this.click=fn}};
+          buttons.push(b);return b;
+        });
+      }
       return [];
     }
   };
-  const rows=[{order_code:'DAYI-260930-TESTORDER',is_test:isTest,amount_cny:39.9,payment_status:state==='waiting_payment_verification'?'pending_verification':'confirmed',process_status:state,result_a_path:privateResult?'reviewed/example/result.png':null,result_bucket:privateResult?'dayi-private-results':'order-results',advice_json:[]}];
+  const rows=[{order_code:'DAYI-260930-TESTORDER',is_test:isTest,amount_cny:39.9,payment_status:state==='waiting_payment_verification'?'pending_verification':'confirmed',process_status:state,result_a_path:privateResult?'reviewed/example/result.png':null,result_bucket:privateResult?'dayi-private-results':'order-results',advice_json:state==='completed'?['测试一','测试二','测试三']:[]}];
   const fetcher=async(url,opts={})=>{
     const endpoint=String(url),body=opts.body;
     calls.push({endpoint,method:opts.method,authorization:opts.headers?.Authorization,body});
@@ -48,6 +55,7 @@ function dashboard({owner=true,shared=true,firstOrderUnauthorized=false,isTest=t
     }
     if(endpoint.endsWith('/functions/v1/direction-feedback-api')){
       if(JSON.parse(body).action==='admin_history')return Response.json({deliveries:[{image_url:'https://example.test/private-signed-result'}]});
+      if(JSON.parse(body).action==='admin_result_link')return Response.json({order_code:'DAYI-260930-TESTORDER',access_token:'a'.repeat(64)});
       return Response.json({confirmed:true,state:'pending_generation'});
     }
     if(endpoint.includes('/rest/v1/rpc/'))return Response.json([]);
@@ -61,7 +69,7 @@ function dashboard({owner=true,shared=true,firstOrderUnauthorized=false,isTest=t
   };
   const runtime={document,fetch:fetcher,Response,window:{supabase:{createClient:()=>({auth})},confirm(){confirmCount++;return true}},
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
-    Date,setTimeout,clearTimeout,URL,navigator:{},FormData};
+    Date,setTimeout,clearTimeout,URL,URLSearchParams,navigator:{},FormData};
   vm.createContext(runtime);vm.runInContext(script,runtime);
   return {calls,buttons,details,element,storage,authEvent:()=>authEvent,confirmCount:()=>confirmCount,settle:()=>new Promise(resolve=>setTimeout(resolve,5))};
 }
@@ -115,4 +123,18 @@ test('private delivery preview uses owner history signed URL rather than public 
   app.details[0].open=true;app.details[0].toggle();await app.settle();
   assert.equal(app.element('result_DAYI-260930-TESTORDER').src,'https://example.test/private-signed-result');
   assert.equal(app.calls.filter(x=>x.endpoint.includes('/functions/v1/direction-feedback-api')).length,1);
+});
+
+test('completed synthetic order exposes an owner-generated customer link without leaking it to other rows',async()=>{
+  const app=dashboard({state:'completed',privateResult:true});await app.settle();
+  assert.match(app.element('orders').innerHTML,/data-open-test-result/);
+  app.buttons[0].click();await app.settle();
+  const calls=app.calls.filter(x=>x.endpoint.endsWith('/functions/v1/direction-feedback-api'));
+  assert.equal(calls.length,1);
+  assert.deepEqual(JSON.parse(calls[0].body),{action:'admin_result_link',order_code:'DAYI-260930-TESTORDER'});
+  const link=app.element('action_note_DAYI-260930-TESTORDER').children[0];
+  assert.match(link.href,/^https:\/\/dayi-garden-feedback\.day1garden58\.chatgpt\.site\/direction-feedback\/#order=DAYI-260930-TESTORDER&key=a{64}$/);
+  assert.equal(link.rel,'noopener noreferrer');
+  const real=dashboard({state:'completed',privateResult:true,isTest:false});await real.settle();
+  assert.doesNotMatch(real.element('orders').innerHTML,/data-open-test-result/);
 });

@@ -648,7 +648,7 @@ input:focus{border-color:#999}
   function stopQuietRefresh(){if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null}}
   function showDash(){
     $('loginView').classList.add('hidden');$('dashboard').classList.remove('hidden');$('logoutBtn').classList.remove('hidden');
-    $('adminEmail').textContent=ADMIN_EMAIL; loadData(); startQuietRefresh();
+    $('adminEmail').textContent=ADMIN_EMAIL; loadData();
   }
   function showLogin(msg){
     stopQuietRefresh();

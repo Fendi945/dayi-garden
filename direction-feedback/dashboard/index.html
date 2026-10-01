@@ -137,6 +137,7 @@ input:focus{border-color:#999}
       <button data-days="7">近7天</button>
       <button data-days="30">近30天</button>
       <span id="lastUpdated" class="refresh" style="align-self:center;margin-left:auto"></span>
+      <button id="manualRefresh" class="linkbtn">刷新</button>
     </div>
 
     <section class="metrics">
@@ -635,11 +636,22 @@ input:focus{border-color:#999}
     }
   }
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
+  var refreshTimer=null;
+  function startQuietRefresh(){
+    if(refreshTimer)clearInterval(refreshTimer);
+    refreshTimer=setInterval(function(){
+      if(document.visibilityState==='visible' && !$('dashboard').classList.contains('hidden')) loadOrders().then(function(){
+        $('lastUpdated').textContent='订单更新 '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+      }).catch(function(){});
+    },60000);
+  }
+  function stopQuietRefresh(){if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null}}
   function showDash(){
     $('loginView').classList.add('hidden');$('dashboard').classList.remove('hidden');$('logoutBtn').classList.remove('hidden');
-    $('adminEmail').textContent=ADMIN_EMAIL; loadData();
+    $('adminEmail').textContent=ADMIN_EMAIL; loadData(); startQuietRefresh();
   }
   function showLogin(msg){
+    stopQuietRefresh();
     $('dashboard').classList.add('hidden');$('loginView').classList.remove('hidden');$('logoutBtn').classList.add('hidden');
     $('orders').replaceChildren();$('sources').replaceChildren();$('funnel').replaceChildren();
     $('adminEmail').textContent=''; if(msg)$('loginError').textContent=msg;
@@ -657,6 +669,10 @@ input:focus{border-color:#999}
     btn.disabled=false;btn.textContent='登录仪表盘';
   };
   $('password').addEventListener('keydown',function(e){if(e.key==='Enter')$('loginBtn').click()});
+  $('manualRefresh').onclick=function(){
+    var btn=this,old=btn.textContent;btn.disabled=true;btn.textContent='刷新中…';
+    loadData().finally(function(){btn.disabled=false;btn.textContent=old});
+  };
   $('logoutBtn').onclick=async function(){
     if(usingShared)try{await sharedAuth.auth.signOut({scope:'local'})}catch(e){}
     clearSession();showLogin('已退出登录。');

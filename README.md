@@ -23,3 +23,6 @@ Actual desktop/phone login and a synthetic order visible to the customer are req
 - hardening/day1-v1-production: phase-labelled engineering work; the session/frontend changes are merged into master, while full system acceptance remains pending.
 
 Read AGENTS.md. Detailed audit and deployment map are in the private core repository's CURRENT_SYSTEM_MAP.md. V1.0 hardening is not yet certified. Never expose private source or production secrets to this public repository.
+
+## Password recovery hardening
+Existing reset.html and recover-v2.html retain their UI and exact redirect contracts. They load session.js plus the shared recovery.js controller: scrub callback fragments immediately, verify credentials against hosted Auth before permitting a password update, bound requests to 30 seconds, suppress concurrent sends with a timestamp-only cooldown, and clear password/token state after successful save. Network ambiguity never resends an email or repeats a password update automatically. Legacy reset-session fallback is verified server-side rather than trusted. Automated tests use synthetic requests and do not send email/change the real owner password. Actual hosted recovery remains a separate acceptance gate.

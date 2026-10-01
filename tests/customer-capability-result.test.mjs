@@ -11,7 +11,7 @@ function viewer({hash='#order='+code+'&key='+key,decode=Promise.resolve(),status
   const calls=[],elements=new Map();
   function element(id){
     if(!elements.has(id))elements.set(id,{
-      style:{},textContent:'',src:'',complete:true,naturalWidth:800,children:[],
+      style:{},textContent:'',src:'',complete:true,naturalWidth:800,children:[],onload:null,onerror:null,
       classList:{classes:new Set(id==='resultBox'?['hidden']:[]),add(s){this.classes.add(s)},remove(s){this.classes.delete(s)},contains(s){return this.classes.has(s)},toggle(s,b){b?this.add(s):this.remove(s)}},
       replaceChildren(){this.children=[]},appendChild(n){this.children.push(n)},decode(){return decode}
     });
@@ -24,6 +24,7 @@ function viewer({hash='#order='+code+'&key='+key,decode=Promise.resolve(),status
     if(body.action==='result_seen')return Response.json({recorded:true});
     return Response.json({order_code:code,process_status:'completed',image_url:'https://signed.example/result',advice:['一','二','三'],delivery_id:6});
   };
+  for(const id of ['resultImg']){const img=element(id);Object.defineProperty(img,'src',{get(){return this._src||''},set(v){this._src=v;decode.then(()=>queueMicrotask(()=>this.onload?.()),()=>queueMicrotask(()=>this.onerror?.()))}})}
   const context={window:{location:{hash}},document,fetch,Response,URLSearchParams,AbortSignal,Promise,clearTimeout,setTimeout:()=>1,requestAnimationFrame:fn=>queueMicrotask(fn)};
   vm.createContext(context);vm.runInContext(source,context);
   return {calls,element,settle:()=>new Promise(resolve=>setTimeout(resolve,10))};

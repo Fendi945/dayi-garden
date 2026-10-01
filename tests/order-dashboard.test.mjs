@@ -136,5 +136,5 @@ test('completed synthetic order exposes an owner-generated customer link without
   assert.match(link.href,/^https:\/\/fendi945\.github\.io\/dayi-garden\/direction-feedback\/#order=DAYI-260930-TESTORDER&key=a{64}$/);
   assert.equal(link.rel,'noopener noreferrer');
   const real=dashboard({state:'completed',privateResult:true,isTest:false});await real.settle();
-  assert.doesNotMatch(real.element('orders').innerHTML,/data-open-test-result/);
+  assert.match(real.element('orders').innerHTML,/data-open-test-result/,'completed production orders also expose an owner-generated customer preview link');
 });

@@ -378,8 +378,8 @@ input:focus{border-color:#999}
             : (!o.is_test&&(o.process_status==='failed'||o.process_status==='pending_generation'||o.process_status==='queued'))
               ? '<button class="action-secondary" data-retry-generate="'+esc(o.order_code||'')+'">重新尝试生成</button>'
               : '')+
-          (o.is_test&&o.process_status==='completed'&&o.result_a_path&&advice.length===3
-            ? '<button class="action-secondary" data-open-test-result="'+esc(o.order_code||'')+'">获取测试结果入口</button>'
+          (o.process_status==='completed'&&o.result_a_path&&advice.length===3
+            ? '<button class="action-secondary" data-open-test-result="'+esc(o.order_code||'')+'">以客户身份查看结果</button>'
             : '')+
         '</div>'+
         '<div id="action_note_'+id+'" class="action-note">'+
@@ -468,17 +468,17 @@ input:focus{border-color:#999}
   async function showTestResultLink(orderCode,btn){
     var note=$('action_note_'+safeId(orderCode));
     btn.disabled=true;
-    if(note)note.textContent='正在生成仅供测试的结果入口…';
+    if(note)note.textContent='正在生成客户结果页…';
     try{
       var x=await adminApiJson({action:'admin_result_link',order_code:orderCode});
-      if(x.order_code!==orderCode||!/^[a-f0-9]{64}$/.test(x.access_token||''))throw new Error('测试结果入口无效');
+      if(x.order_code!==orderCode||!/^[a-f0-9]{64}$/.test(x.access_token||''))throw new Error('客户结果入口无效');
       var url=new URL(CUSTOMER_URL);
       url.hash=new URLSearchParams({order:orderCode,key:x.access_token}).toString();
       if(note){
-        note.textContent='仅供合成测试；点击下方链接即可查看私有交付。请勿转发包含查看凭证的链接。 ';
-        var link=document.createElement('a');link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';link.textContent='打开测试结果页';note.appendChild(link);
+        note.textContent='这是该订单的客户结果页预览。链接包含私有查看凭证，请勿公开转发。 ';
+        var link=document.createElement('a');link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';link.textContent='打开客户结果页';note.appendChild(link);
       }
-      btn.textContent='测试入口已生成';
+      btn.textContent='客户结果页已生成';
     }catch(e){
       if(note)note.textContent=e.message||String(e);
       btn.disabled=false;

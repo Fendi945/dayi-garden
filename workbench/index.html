@@ -447,6 +447,7 @@ label{display:block;font-size:11px;color:var(--muted);margin:12px 0 6px}.btn{bor
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0"></script>
 <script src="./session.js"></script>
 <script src="./client-preview.js"></script>
+<script src="./production-status.js"></script>
 <script>
 const SUPABASE_URL='https://fhvhnibznphatfnbvvnb.supabase.co';
 const PUBLIC_KEY='sb_publishable_8_ElUXtWKbEM9Of37zdYug_mdWjcV4B';
@@ -463,21 +464,25 @@ const clip=(s,n)=>{s=String(s||'').trim();return s.length>n?s.slice(0,n)+'…':s
 const pct=v=>Number.isFinite(Number(v))?Math.round(Number(v)*100)+'%':'—';
 const cny=v=>'¥'+Number(v||0).toLocaleString('zh-CN',{maximumFractionDigits:2});
 let dashboard=null;
+let productionStatus=null;
 
 // Keep the confirmed interface; restore only dynamic/private content at sign-out.
 const privateViewDefaults=new Map(qa('#appView [id]').filter(el=>['dashOrders','clientOrders','dashTasks','crmContacts','assetList','candidateList','taskList','result','crmMsg','passwordMsg','dashAsOf','jevStatus','sJev','sAsset','mClients','mMonthRevenue','mOpenOrders','mAssets','cClients','cPipeline','cFollow','cWon','fMonth','fAll','fPaid','activeTaskCount','orderCount','pipeLead','pipeContacted','pipeQualified','pipeProposal','pipeWon','pipeLost','pipeOverdue','statAssets','statCandidates','statInbox'].includes(el.id)).map(el=>[el,el.innerHTML]));
 function showLogin(){
   window.Day1ClientPreview?.close();
+  productionStatus?.clear();
   dashboard=null;privateViewDefaults.forEach((html,el)=>el.innerHTML=html);
   qa('#appView input,#appView textarea').forEach(el=>el.value='');q('#loginPassword').value='';
   q('#loginView').classList.remove('hidden');q('#appView').classList.add('hidden');q('#nav').classList.add('hidden');
 }
 function showApp(){q('#loginPassword').value='';q('#loginView').classList.add('hidden');q('#appView').classList.remove('hidden');q('#nav').classList.remove('hidden');openTab('dashboard');checkJev()}
 const sessionControl=Day1Session.create({auth:sb.auth,publicKey:PUBLIC_KEY,onSession:showApp,onSignedOut:showLogin,onRecovery:()=>openTab('account')});
+productionStatus=Day1ProductionStatus.create({api:body=>sessionControl.api(SUPABASE_URL+'/functions/v1/direction-feedback-api',body)});
 async function api(url,body){return sessionControl.api(url,body)}
 function openTab(name){
   ['dashboard','clients','finance','design','content','assets','tasks','core','account'].forEach(n=>q('#tab-'+n).classList.toggle('hidden',n!==name));
   qa('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  if(name==='design')productionStatus.refresh();
   if(name==='assets')loadAssets();if(name==='tasks')loadTasks();if(name==='clients')loadCRM();if((name==='clients'||name==='finance'||name==='dashboard')&&!dashboard)loadDashboard();
 }
 qa('[data-tab]').forEach(b=>b.onclick=()=>openTab(b.dataset.tab));

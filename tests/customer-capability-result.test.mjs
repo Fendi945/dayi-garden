@@ -7,8 +7,8 @@ const source=fs.readFileSync(new URL('../direction-feedback/capability-result.js
 const html=fs.readFileSync(new URL('../direction-feedback/index.html',import.meta.url),'utf8');
 const code='DAYI-260930-TESTORDER',key='a'.repeat(64);
 
-function viewer({hash='#order='+code+'&key='+key,decode=Promise.resolve(),status=200}={}){
-  const calls=[],elements=new Map();
+function viewer({hash='#order='+code+'&key='+key,decode=Promise.resolve(),status=200,hidden=false,loaded=false,synchronous=false,processStatus='completed',receiptStatus=200}={}){
+  const calls=[],elements=new Map(),timers=new Map();let nextTimer=1;
   function element(id){
     if(!elements.has(id))elements.set(id,{
       style:{},textContent:'',src:'',complete:true,naturalWidth:800,children:[],onload:null,onerror:null,
@@ -17,17 +17,27 @@ function viewer({hash='#order='+code+'&key='+key,decode=Promise.resolve(),status
     });
     return elements.get(id);
   }
-  const document={hidden:false,getElementById:element,querySelectorAll:s=>s==='.step'?[{getAttribute:()=> '8',classList:element('step').classList}]:[],createElement:()=>({children:[],appendChild(n){this.children.push(n)}}),createTextNode:t=>({textContent:t}),addEventListener(){}};
+  const document={hidden,getElementById:element,querySelectorAll:s=>s==='.step'?[{getAttribute:()=> '8',classList:element('step').classList}]:[],createElement:()=>({children:[],appendChild(n){this.children.push(n)}}),createTextNode:t=>({textContent:t}),addEventListener(){}};
   const fetch=async(_,options)=>{
     const body=JSON.parse(options.body);calls.push(body);
     if(status!==200)return Response.json({error:'order_access_denied'},{status});
-    if(body.action==='result_seen')return Response.json({recorded:true});
-    return Response.json({order_code:code,process_status:'completed',image_url:'https://signed.example/result',advice:['一','二','三'],delivery_id:6});
+    if(body.action==='result_seen')return Response.json({recorded:receiptStatus===200},{status:receiptStatus});
+    return Response.json({order_code:code,process_status:processStatus,image_url:'https://signed.example/result',advice:['一','二','三'],delivery_id:6});
   };
-  for(const id of ['resultImg']){const img=element(id);Object.defineProperty(img,'src',{get(){return this._src||''},set(v){this._src=v;decode.then(()=>queueMicrotask(()=>this.onload?.()),()=>queueMicrotask(()=>this.onerror?.()))}})}
-  const context={window:{location:{hash}},document,fetch,Response,URLSearchParams,AbortSignal,Promise,clearTimeout,setTimeout:()=>1,requestAnimationFrame:fn=>queueMicrotask(fn)};
+  const img=element('resultImg');
+  Object.defineProperty(img,'src',{
+    get(){return this._src||''},
+    set(v){
+      this._src=v;this.complete=false;this.naturalWidth=0;
+      if(loaded||synchronous){this.complete=true;this.naturalWidth=800;if(synchronous)this.onload?.();return;}
+      decode.then(()=>queueMicrotask(()=>{this.complete=true;this.naturalWidth=800;this.onload?.()}),
+        ()=>queueMicrotask(()=>{this.complete=true;this.naturalWidth=0;this.onerror?.()}));
+    }
+  });
+  const context={window:{location:{hash}},document,fetch,Response,URLSearchParams,AbortSignal,Promise,
+    clearTimeout:id=>timers.delete(id),setTimeout:fn=>{const id=nextTimer++;timers.set(id,fn);return id},requestAnimationFrame:fn=>queueMicrotask(fn)};
   vm.createContext(context);vm.runInContext(source,context);
-  return {calls,element,settle:()=>new Promise(resolve=>setTimeout(resolve,10))};
+  return {calls,element,timers,settle:()=>new Promise(resolve=>setTimeout(resolve,10))};
 }
 
 test('legacy intake remains present and loads the result adapter only for a capability fragment',async()=>{
@@ -64,4 +74,45 @@ test('a signed URL that fails to decode is not reported as viewed',async()=>{
   const app=viewer({decode});await app.settle();rejectDecode(new Error('image failed'));await app.settle();
   assert.deepEqual(app.calls.map(x=>x.action),['result']);
   assert.equal(app.element('resultBox').classList.contains('hidden'),true);
+  assert.equal(app.element('resultImg').onload,null);
+  assert.equal(app.element('resultImg').onerror,null);
+  assert.equal(app.timers.size,0);
+});
+
+test('cached and synchronous image loads both retain display-before-receipt ordering',async()=>{
+  for(const options of [{loaded:true},{synchronous:true}]){
+    const app=viewer(options);await app.settle();
+    assert.equal(app.element('resultBox').classList.contains('hidden'),false);
+    assert.deepEqual(app.calls.map(x=>x.action),['result','result_seen']);
+    assert.equal(app.element('resultImg').onload,null);
+    assert.equal(app.timers.size,0);
+  }
+});
+
+test('image timeout cannot acknowledge and clears its listeners',async()=>{
+  const app=viewer({decode:new Promise(()=>{})});await app.settle();
+  assert.equal(app.timers.size,1);
+  for(const expire of [...app.timers.values()])expire();await app.settle();
+  assert.deepEqual(app.calls.map(x=>x.action),['result']);
+  assert.equal(app.element('resultBox').classList.contains('hidden'),true);
+  assert.equal(app.element('resultImg').onload,null);
+  assert.equal(app.timers.size,0);
+});
+
+test('background pages do not acknowledge and pending results require manual refresh',async()=>{
+  const hidden=viewer({hidden:true});await hidden.settle();
+  assert.deepEqual(hidden.calls.map(x=>x.action),['result']);
+  const pending=viewer({processStatus:'queued'});await pending.settle();
+  assert.deepEqual(pending.calls.map(x=>x.action),['result']);
+  assert.equal(pending.element('resultBox').classList.contains('hidden'),true);
+  assert.match(pending.element('statusText').textContent,/刷新/);
+  assert.equal(pending.timers.size,0);
+});
+
+test('failed display receipt keeps the visible result without claiming an automatic retry',async()=>{
+  const app=viewer({receiptStatus:503});await app.settle();
+  assert.equal(app.element('resultBox').classList.contains('hidden'),false);
+  assert.match(app.element('statusText').textContent,/未确认.*刷新/);
+  assert.deepEqual(app.calls.map(x=>x.action),['result','result_seen']);
+  assert.equal(app.timers.size,0);
 });

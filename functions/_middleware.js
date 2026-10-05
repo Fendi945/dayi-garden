@@ -74,7 +74,13 @@ export async function onRequest(context) {
   if (url.protocol !== 'https:') return response('', 308, { Location: 'https://' + url.host + url.pathname + url.search });
   if (url.pathname === LOGIN || url.pathname === LOGOUT) {
     if (request.method === 'POST') {
-      if (request.headers.get('Origin') !== url.origin) return response('请求无效，请重新打开登录页面。', 403);
+      const origin = request.headers.get('Origin');
+      const sameSite = request.headers.get('Sec-Fetch-Site') === 'same-origin';
+      // Older open login pages may submit Origin: null due to their referrer policy.
+      // Fetch Metadata still proves that the browser submitted from this origin.
+      if (origin !== url.origin && !((origin === null || origin === 'null') && sameSite)) {
+        return welcome('登录页面已更新，请刷新后重试。', 403);
+      }
       if (url.pathname === LOGOUT) return response('', 303, { Location: LOGIN, 'Set-Cookie': cookie('', 0) });
       if (Number(request.headers.get('Content-Length') || 0) > 4096) return welcome('密码不正确，请重试。', 401);
       let supplied;

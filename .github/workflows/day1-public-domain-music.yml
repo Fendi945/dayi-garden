@@ -1,4 +1,4 @@
-name: DAY1 Public Domain Piano Cuts
+name: DAY1 CC0 Guzheng Cuts
 
 on:
   push:
@@ -13,32 +13,38 @@ jobs:
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - name: Download public-domain piano recording
+      - name: Download CC0 guzheng solo
         run: |
           curl -L --fail --retry 3 \
-            "https://upload.wikimedia.org/wikipedia/commons/9/90/Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg" \
-            -o source.ogg
+            "https://raw.githubusercontent.com/Oozaruu/TongGameUpdateServiceBinaries/main/win-x64/Assets/Audio/quadro_2_8bit.mp3" \
+            -o source.mp3
 
-      - name: Create DAY1 piano cuts
+      - name: Inspect
+        run: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 source.mp3
+
+      - name: Create three DAY1 guzheng cuts
         run: |
           mkdir -p out
-          # Three calm windows, all filtered darker and normalized below -20 LUFS.
-          ffmpeg -y -ss 8   -t 16.5 -i source.ogg -af "highpass=f=45,lowpass=f=4300,afade=t=in:st=0:d=2.0,afade=t=out:st=15.2:d=1.3,loudnorm=I=-24:TP=-6:LRA=5" -ar 48000 -ac 2 -b:a 192k out/A_piano_8s.mp3
-          ffmpeg -y -ss 62  -t 16.5 -i source.ogg -af "highpass=f=45,lowpass=f=4300,afade=t=in:st=0:d=2.0,afade=t=out:st=15.2:d=1.3,loudnorm=I=-24:TP=-6:LRA=5" -ar 48000 -ac 2 -b:a 192k out/B_piano_62s.mp3
-          ffmpeg -y -ss 126 -t 16.5 -i source.ogg -af "highpass=f=45,lowpass=f=4300,afade=t=in:st=0:d=2.0,afade=t=out:st=15.2:d=1.3,loudnorm=I=-24:TP=-6:LRA=5" -ar 48000 -ac 2 -b:a 192k out/C_piano_126s.mp3
+          ffmpeg -y -ss 4  -t 16.5 -i source.mp3 -af "highpass=f=55,lowpass=f=5200,afade=t=in:st=0:d=2.0,afade=t=out:st=15.2:d=1.3,loudnorm=I=-24:TP=-6:LRA=5" -ar 48000 -ac 2 -b:a 192k out/A_guzheng_4s.mp3
+          ffmpeg -y -ss 28 -t 16.5 -i source.mp3 -af "highpass=f=55,lowpass=f=5200,afade=t=in:st=0:d=2.0,afade=t=out:st=15.2:d=1.3,loudnorm=I=-24:TP=-6:LRA=5" -ar 48000 -ac 2 -b:a 192k out/B_guzheng_28s.mp3
+          ffmpeg -y -ss 52 -t 16.5 -i source.mp3 -af "highpass=f=55,lowpass=f=5200,afade=t=in:st=0:d=2.0,afade=t=out:st=15.2:d=1.3,loudnorm=I=-24:TP=-6:LRA=5" -ar 48000 -ac 2 -b:a 192k out/C_guzheng_52s.mp3
 
       - name: Write licence note
         run: |
           cat > out/LICENSE.txt <<'EOF'
-          Source: Erik Satie - Gymnopédie No. 1, performed by Robin Alciatore
-          Source: https://commons.wikimedia.org/wiki/File:Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg
-          Licence: Public domain (recording released into the public domain by the performer)
-          Processing: excerpting, low-pass EQ, fade in/out, loudness normalization.
+          Source title: "guzheng solo"
+          Creator: neolein
+          Original source: https://freesound.org/people/neolein/sounds/472707/
+          Licence: Creative Commons Zero (CC0 1.0)
+          Source confirmation: Freesound page states CC0 and permits commercial reuse without permission.
+          Repository copy used for processing:
+          https://github.com/Oozaruu/TongGameUpdateServiceBinaries/blob/main/win-x64/Assets/Audio/quadro_2_8bit.mp3
+          Processing: excerpting, darker EQ, fade in/out, loudness normalization.
           EOF
 
       - name: Upload cuts
         uses: actions/upload-artifact@v4
         with:
-          name: day1-public-domain-piano-cuts
+          name: day1-cc0-guzheng-cuts
           path: out/
           retention-days: 3

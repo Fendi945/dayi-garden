@@ -1,4 +1,4 @@
-name: DAY1 Public Domain Music Cuts
+name: DAY1 Public Domain Piano Cuts
 
 on:
   push:
@@ -13,35 +13,32 @@ jobs:
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - name: Download public-domain shakuhachi recording
+      - name: Download public-domain piano recording
         run: |
           curl -L --fail --retry 3 \
-            "https://raw.githubusercontent.com/victor-onoja/degenChess/master/public/music/shika-no-t-ne-shakuhachi.mp3" \
-            -o source.mp3
+            "https://upload.wikimedia.org/wikipedia/commons/9/90/Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg" \
+            -o source.ogg
 
-      - name: Create DAY1 cuts
+      - name: Create DAY1 piano cuts
         run: |
           mkdir -p out
-          # Three 16.5 s windows from different parts of the public-domain recording.
-          # Keep them gentle, speech-friendly, and clearly audible.
-          ffmpeg -y -ss 0   -t 16.5 -i source.mp3 -af "highpass=f=60,lowpass=f=7500,afade=t=in:st=0:d=2.2,afade=t=out:st=15.3:d=1.2,loudnorm=I=-20:TP=-3:LRA=6" -ar 48000 -ac 2 -b:a 192k out/A_shakuhachi_0s.mp3
-          ffmpeg -y -ss 75  -t 16.5 -i source.mp3 -af "highpass=f=60,lowpass=f=7500,afade=t=in:st=0:d=2.2,afade=t=out:st=15.3:d=1.2,loudnorm=I=-20:TP=-3:LRA=6" -ar 48000 -ac 2 -b:a 192k out/B_shakuhachi_75s.mp3
-          ffmpeg -y -ss 165 -t 16.5 -i source.mp3 -af "highpass=f=60,lowpass=f=7500,afade=t=in:st=0:d=2.2,afade=t=out:st=15.3:d=1.2,loudnorm=I=-20:TP=-3:LRA=6" -ar 48000 -ac 2 -b:a 192k out/C_shakuhachi_165s.mp3
+          # Three calm windows, all filtered darker and normalized below -20 LUFS.
+          ffmpeg -y -ss 8   -t 16.5 -i source.ogg -af "highpass=f=45,lowpass=f=4300,afade=t=in:st=0:d=2.0,afade=t=out:st=15.2:d=1.3,loudnorm=I=-24:TP=-6:LRA=5" -ar 48000 -ac 2 -b:a 192k out/A_piano_8s.mp3
+          ffmpeg -y -ss 62  -t 16.5 -i source.ogg -af "highpass=f=45,lowpass=f=4300,afade=t=in:st=0:d=2.0,afade=t=out:st=15.2:d=1.3,loudnorm=I=-24:TP=-6:LRA=5" -ar 48000 -ac 2 -b:a 192k out/B_piano_62s.mp3
+          ffmpeg -y -ss 126 -t 16.5 -i source.ogg -af "highpass=f=45,lowpass=f=4300,afade=t=in:st=0:d=2.0,afade=t=out:st=15.2:d=1.3,loudnorm=I=-24:TP=-6:LRA=5" -ar 48000 -ac 2 -b:a 192k out/C_piano_126s.mp3
 
       - name: Write licence note
         run: |
           cat > out/LICENSE.txt <<'EOF'
-          Source: "Shika no Tōne (shakuhachi)" performed by Araki Kodō III
-          Source record: https://commons.wikimedia.org/wiki/File:Shikanotoone.ogg
-          Licence: Public domain
-          Repository copy used for download:
-          https://github.com/victor-onoja/degenChess/blob/master/public/music/shika-no-t-ne-shakuhachi.mp3
-          Processing: 16.5-second excerpts, fade in/out, EQ, loudness normalization only.
+          Source: Erik Satie - Gymnopédie No. 1, performed by Robin Alciatore
+          Source: https://commons.wikimedia.org/wiki/File:Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg
+          Licence: Public domain (recording released into the public domain by the performer)
+          Processing: excerpting, low-pass EQ, fade in/out, loudness normalization.
           EOF
 
       - name: Upload cuts
         uses: actions/upload-artifact@v4
         with:
-          name: day1-public-domain-shakuhachi-cuts
+          name: day1-public-domain-piano-cuts
           path: out/
           retention-days: 3

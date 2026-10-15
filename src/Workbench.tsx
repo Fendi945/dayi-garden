@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { OrdersConsole } from "./OrdersConsole";
 import {
   ArrowRight,
   Boxes,
@@ -174,6 +175,8 @@ export function Workbench() {
 
         {active === "Home" ? (
           <HomeDashboard query={query} response={response} setQuery={setQuery} submitQuery={submitQuery} onNavigate={setActive} />
+        ) : active === "Business" ? (
+          <OrdersConsole />
         ) : (
           <SectionView section={active} />
         )}

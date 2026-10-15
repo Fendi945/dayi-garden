@@ -44,7 +44,10 @@ body {
 }
 
 button, input { font: inherit; }
-button { cursor: pointer; border: 0; background: transparent; }
+@layer base {
+  button { cursor: pointer; border: 0; }
+}
+
 
 ::selection { background: color-mix(in oklab, var(--brand) 20%, transparent); }
 

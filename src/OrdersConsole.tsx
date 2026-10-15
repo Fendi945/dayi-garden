@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ArrowDownToLine, ArrowLeft, ArrowRight, Camera, CheckCircle2, CircleAlert, Clock3, CreditCard, FileText, LockKeyhole, LogOut, RefreshCw, Search } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { ArrowDownToLine, ArrowRight, Camera, CircleAlert, CreditCard, LockKeyhole, LogOut, RefreshCw, Search } from "lucide-react";
 
 const API = "https://fhvhnibznphatfnbvvnb.supabase.co";
 const PUBLIC_KEY = "sb_publishable_8_ElUXtWKbEM9Of37zdYug_mdWjcV4B";
@@ -34,7 +34,7 @@ function saveSession(next: Session | null) {
 async function apiFetch(path: string, token: string | null, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
   headers.set("apikey", PUBLIC_KEY);
-  headers.set("Authorization", "Bearer " + (token || PUBLIC_KEY));
+  if (token) headers.set("Authorization", "Bearer " + token);
   if (init.body) headers.set("Content-Type", "application/json");
   const result = await fetch(API + path, { ...init, headers, cache: "no-store" });
   if (!result.ok) {
@@ -114,7 +114,7 @@ async function signedUrl(path: string, token: string): Promise<string> {
   if (url.startsWith("/object/")) return API + "/storage/v1" + url;
   throw new Error("图片访问地址无效");
 }
-function Info({ label, value }: { label: string; value: React.ReactNode }) {
+function Info({ label, value }: { label: string; value: ReactNode }) {
   return <div className="border-b border-border py-3"><div className="text-[11px] text-muted-foreground">{label}</div><div className="mt-1 break-words text-sm leading-6">{value || "—"}</div></div>;
 }
 export function OrdersConsole() {

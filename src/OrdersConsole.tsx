@@ -18,6 +18,17 @@ type Order = {
 };
 type Picture = { path: string; url: string | null; error: boolean };
 
+function recoveryAccessTokenFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  if (params.get("type") !== "recovery") return null;
+  const token = params.get("access_token");
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.searchParams.delete("day1_recover");
+  window.history.replaceState(null, "", url.pathname + url.search);
+  return token || null;
+}
 function restoredSession(): Session | null {
   try {
     const raw = window.sessionStorage.getItem(SESSION_KEY);
@@ -120,6 +131,11 @@ function Info({ label, value }: { label: string; value: ReactNode }) {
 export function OrdersConsole() {
   const [session, setSession] = useState<Session | null>(restoredSession);
   const [email, setEmail] = useState("");
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [recoveryToken, setRecoveryToken] = useState<string | null>(recoveryAccessTokenFromUrl);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [notice, setNotice] = useState("");
   const [password, setPassword] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -136,6 +152,43 @@ export function OrdersConsole() {
     saveSession(next);
     setSession(next);
   }
+  async function requestPasswordReset(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true); setError(""); setNotice("");
+    try {
+      const destination = "https://workbench.dayi.homes/?day1_recover=1";
+      await apiFetch("/auth/v1/recover?redirect_to=" + encodeURIComponent(destination), null, {
+        method: "POST",
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      setNotice("重置邮件请求已提交。请查收管理员邮箱（也检查垃圾邮件），点击邮件内的重置链接后返回本工作台设置新密码。");
+    } catch (e) {
+      setError("发送重置邮件失败：" + (e instanceof Error ? e.message : "请稍后重试"));
+    } finally { setBusy(false); }
+  }
+
+  async function completePasswordReset(event: FormEvent) {
+    event.preventDefault();
+    if (!recoveryToken) return;
+    if (newPassword.length < 12) {
+      setError("请使用至少 12 位的新密码。"); return;
+    }
+    if (newPassword !== passwordConfirmation) {
+      setError("两次输入的新密码不一致。"); return;
+    }
+    setBusy(true); setError(""); setNotice("");
+    try {
+      await apiFetch("/auth/v1/user", recoveryToken, {
+        method: "PUT", body: JSON.stringify({ password: newPassword }),
+      });
+      setNewPassword(""); setPasswordConfirmation(""); setPassword("");
+      setRecoveryToken(null); setRecoveryMode(false);
+      setNotice("订单管理员密码已更新，请用刚设置的新密码登录。");
+    } catch (e) {
+      setError("更新密码失败：" + (e instanceof Error ? e.message : "链接可能已过期，请重新发送重置邮件。"));
+    } finally { setBusy(false); }
+  }
+
   async function login(event: FormEvent) {
     event.preventDefault();
     setBusy(true); setError("");
@@ -213,15 +266,38 @@ export function OrdersConsole() {
           <button type="button" onClick={() => { remember(null); setOrders([]); setPictures([]); }} className="inline-flex items-center gap-2 rounded border border-border px-4 py-2 text-xs hover:bg-secondary"><LogOut className="size-4" />退出订单后台</button>
         </div>}
       </div>
-      {!session ? (
+      {!session && recoveryToken ? (
+        <form onSubmit={(event) => void completePasswordReset(event)} className="mx-auto max-w-md border border-border bg-secondary/30 p-7 md:p-9">
+          <LockKeyhole className="size-7 text-brand" />
+          <h2 className="mt-5 text-xl font-semibold">设置新的订单管理员密码</h2>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">邮箱验证已完成。新密码只在当前页面中提交到身份验证服务，不会显示在聊天记录中。</p>
+          <label className="mt-8 block text-xs font-medium">新密码（至少 12 位）<input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" required minLength={12} className="mt-2 w-full rounded border border-border bg-background p-3 text-sm" /></label>
+          <label className="mt-5 block text-xs font-medium">再次输入新密码<input type="password" value={passwordConfirmation} onChange={(e) => setPasswordConfirmation(e.target.value)} autoComplete="new-password" required minLength={12} className="mt-2 w-full rounded border border-border bg-background p-3 text-sm" /></label>
+          {error && <p role="alert" className="mt-4 text-sm text-brand">{error}</p>}
+          <button type="submit" disabled={busy} className="mt-7 flex w-full items-center justify-center gap-2 rounded bg-primary p-3 text-sm text-primary-foreground disabled:opacity-60">{busy ? "正在更新..." : "保存新密码"}</button>
+        </form>
+      ) : !session && recoveryMode ? (
+        <form onSubmit={(event) => void requestPasswordReset(event)} className="mx-auto max-w-md border border-border bg-secondary/30 p-7 md:p-9">
+          <LockKeyhole className="size-7 text-brand" />
+          <h2 className="mt-5 text-xl font-semibold">找回订单管理员密码</h2>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">我们会将密码重置链接发送到管理员邮箱。重置密码不会删除订单或客户照片。</p>
+          <label className="mt-8 block text-xs font-medium">订单管理员邮箱<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username" className="mt-2 w-full rounded border border-border bg-background p-3 text-sm" placeholder="输入管理员邮箱" /></label>
+          {notice && <p role="status" className="mt-4 text-sm text-foreground">{notice}</p>}
+          {error && <p role="alert" className="mt-4 text-sm text-brand">{error}</p>}
+          <button type="submit" disabled={busy} className="mt-7 flex w-full items-center justify-center gap-2 rounded bg-primary p-3 text-sm text-primary-foreground disabled:opacity-60">{busy ? "正在提交..." : "向邮箱发送重置链接"}</button>
+          <button type="button" onClick={() => { setRecoveryMode(false); setError(""); setNotice(""); }} className="mt-4 w-full py-2 text-xs text-muted-foreground underline">返回管理员登录</button>
+        </form>
+      ) : !session ? (
         <form onSubmit={(event) => void login(event)} className="mx-auto max-w-md border border-border bg-secondary/30 p-7 md:p-9">
           <LockKeyhole className="size-7 text-brand" />
           <h2 className="mt-5 text-xl font-semibold">管理员身份验证</h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">为保护客户资料，请使用大一订单系统的管理员邮箱和密码。这里与工作台入口密码是两道不同的保护。</p>
           <label className="mt-8 block text-xs font-medium">管理员邮箱<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" required className="mt-2 w-full rounded border border-border bg-background p-3 text-sm outline-brand" placeholder="输入管理员邮箱" /></label>
           <label className="mt-5 block text-xs font-medium">登录密码<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required className="mt-2 w-full rounded border border-border bg-background p-3 text-sm outline-brand" placeholder="输入订单系统密码" /></label>
+          {notice && <p className="mt-4 text-sm text-foreground" role="status">{notice}</p>}
           {error && <p className="mt-4 text-sm text-brand" role="alert">{error}</p>}
           <button disabled={busy} type="submit" className="mt-7 flex w-full items-center justify-center gap-2 rounded bg-primary p-3 text-sm text-primary-foreground disabled:opacity-60">{busy ? "正在验证..." : "登录查看客户订单"} <ArrowRight className="size-4" /></button>
+          <button type="button" onClick={() => { setRecoveryMode(true); setError(""); setNotice(""); }} className="mt-4 w-full py-2 text-center text-xs text-muted-foreground underline">忘记订单管理员密码？</button>
         </form>
       ) : (
         <>

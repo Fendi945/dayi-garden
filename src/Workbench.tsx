@@ -91,7 +91,7 @@ function Wordmark() {
 }
 
 export function Workbench() {
-  const [active, setActive] = useState<Section>("Home");
+  const [active, setActive] = useState<Section>(() => typeof window !== "undefined" && (new URLSearchParams(window.location.search).has("day1_recover") || new URLSearchParams(window.location.hash.replace(/^#/, "")).get("type") === "recovery") ? "Business" : "Home");
   const [playing, setPlaying] = useState(false);
   const [query, setQuery] = useState("");
   const [response, setResponse] = useState("我正在关注今天的经营信号。你可以询问简报、决策建议或行动方案。");
